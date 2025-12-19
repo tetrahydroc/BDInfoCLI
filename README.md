@@ -1,101 +1,109 @@
-BDInfoCLI-ng
-======
+# BDInfoCLI-ng
 
-Original source origin: http://www.cinemasquid.com/blu-ray/tools/bdinfo
+A command-line Blu-ray disc analysis tool with UHD support, built on .NET 8.
 
-BDInfoCLI-ng forked from: https://github.com/UniqProject/BDInfo
+## About
 
-Additional sources from BDInfoCLI (https://github.com/Tripplesixty/BDInfoCLI)
+Forked from [zoffline/BDInfoCLI-ng](https://github.com/zoffline/BDInfoCLI-ng), which was based on [UniqProject/BDInfo](https://github.com/UniqProject/BDInfo) and [BDInfoCLI](https://github.com/Tripplesixty/BDInfoCLI).
 
-BDInfoCLI-ng is the latest BDInfo (with UHD support) modified for use as a CLI utility. BDInfoCLI-ng implements an interface similar to BDInfoCLI, but on the latest BDInfo code base and with code changes designed to be as minimally invasive as possible for easier maintainability with BDInfo updates.
+Original BDInfo source: http://www.cinemasquid.com/blu-ray/tools/bdinfo
 
-Usage
-======
+This fork migrates from .NET Framework/Mono to native .NET 8, enabling cross-platform support without Mono.
+
+## Download
+
+Pre-built binaries are available on the [Releases](https://github.com/tetrahydroc/BDInfoCLI-ng/releases) page:
+
+| Platform | File |
+|----------|------|
+| Linux x64 | `BDInfo-linux-x64.tar.gz` |
+| Linux ARM64 | `BDInfo-linux-arm64.tar.gz` |
+| Windows x64 | `BDInfo-win-x64.zip` |
+| macOS x64 (Intel) | `BDInfo-osx-x64.tar.gz` |
+| macOS ARM64 (Apple Silicon) | `BDInfo-osx-arm64.tar.gz` |
+
+## Usage
+
 ```
-Usage: BDInfo.exe <BD_PATH> [REPORT_DEST]
+Usage: BDInfo <BD_PATH> [REPORT_DEST]
+
 BD_PATH may be a directory containing a BDMV folder or a BluRay ISO file.
 REPORT_DEST is the folder the BDInfo report is to be written to. If not
 given, the report will be written to BD_PATH. REPORT_DEST is required if
 BD_PATH is an ISO file.
 
-  -?, --help, -h             Print out the options.
-  -l, --list                 Print the list of playlists.
-  -m, --mpls=VALUE           Comma separated list of playlists to scan.
-  -w, --whole                Scan whole disc - every playlist.
-  -v, --version              Print the version.
+Options:
+  -h, --help       Print out the options.
+  -l, --list       Print the list of playlists.
+  -m, --mpls=VALUE Comma separated list of playlists to scan.
+  -w, --whole      Scan whole disc - every playlist.
+  -v, --version    Print the version.
 ```
 
-#### Examples
-```
-# Display playlists in given disc, prompt user to select playlists
-# to scan, and output the generated report to the same disc path:
-# (If an ISO file is given, then a REPORT_DEST must be given as well. See next example.)
-BDInfo.exe BD_PATH
+### Examples
 
-# Same as above, but output report in given report folder:
-# (If BD_PATH is an ISO, these are the minimum arguments required)
-BDInfo.exe BD_PATH REPORT_OUTPUT_DIR
+```bash
+# Display playlists, prompt to select, output report to disc path:
+./BDInfo /path/to/disc
 
-# Just display the list of playlists in the given disc:
-BDInfo.exe -l BD_PATH
+# Scan disc and output report to specific folder:
+./BDInfo /path/to/disc /path/to/report
 
-# Scan the whole disc (every playlist) and write report to disc folder (non-interactive):
-BDInfo.exe -w BD_PATH
+# Scan an ISO file (REPORT_DEST required):
+./BDInfo /path/to/movie.iso /path/to/report
 
-# Scan selected playlists and write report to disc folder (non-interactive):
-BDInfo.exe -m 00006.MPLS,00009.MPLS BD_PATH
+# Just list playlists without scanning:
+./BDInfo -l /path/to/disc
 
-# Display the BDInfo version this build of BDInfoCLI-ng is based on:
-BDInfo.exe -v
-```
+# Scan entire disc non-interactively:
+./BDInfo -w /path/to/disc
 
-Windows
-======
-##### Requirements
-<ul>
-<li>Windows Vista, Windows 7 or higher Operating System</li>
-<li>.NET Framework 4.5 or Higher</li>
-<li>Source Code</li>
-</ul>
+# Scan specific playlists:
+./BDInfo -m 00006.MPLS,00009.MPLS /path/to/disc
 
-BDInfoCLI-ng can be built using the free tool <a href="https://www.visualstudio.com/vs/community/">Microsoft Visual Studio Community Edition</a>. Just install Visual Studio, open ```BDInfo.sln```, and build.
-
-If you don't wish to build it yourself, you can use the prebuilt verson in the prebuilt directory or download it directly from <a href="https://raw.githubusercontent.com/zoffline/BDInfoCLI-ng/UHD_Support_CLI/prebuilt/BDInfoCLI-ng_v0.7.5.5.zip">here</a>.
-
-
-Linux
-======
-BDInfoCLI-ng can be built and run with <a href="https://www.mono-project.com/">Mono</a>.
-
-Using Docker is highly recommend (nobody should have to taint their OS with Mono).
-
-To do so install Docker and then simply use the included ``bdinfo`` wrapper script inside the ``scripts`` directory. The wrapper script automatically handles mounting the necessary directories into the container. The first run will be slow as the container image will have to be downloaded, subsequent runs will not be.
-
-Wrapper script example:
-```
-./bdinfo --help
-
-# Display playlists in given disc, prompt user to select playlists
-# to scan, and output the generated report to the same disc path:
-# (If an ISO file is given, then a REPORT_DEST must be given as well. See next example.)
-./bdinfo BD_PATH
-
-# Same as above, but output report in given report folder:
-# (If BD_PATH is an ISO, these are the minimum arguments required)
-./bdinfo BD_PATH REPORT_OUTPUT_DIR
+# Show version:
+./BDInfo -v
 ```
 
-Alternatively, you can run the Docker container yourself, e.g:
-```
-docker run --rm -it -v <BD_PATH>:/mnt/bd zoffline/bdinfocli-ng /mnt/bd
-```
-or, with a ``REPORT_DEST``:
-```
-docker run --rm -it -v <BD_PATH>:/mnt/bd -v <REPORT_DEST>:/mnt/report zoffline/bdinfocli-ng /mnt/bd /mnt/report
+## Building from Source
+
+### Requirements
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+
+### Build
+
+```bash
+# Build
+dotnet build BDInfo/BDInfo.csproj -c Release
+
+# Run
+dotnet run --project BDInfo/BDInfo.csproj -- /path/to/disc
+
+# Publish self-contained binary
+dotnet publish BDInfo/BDInfo.csproj -c Release -r linux-x64 --self-contained true -o ./publish
 ```
 
-Without Docker you will need to build it and run it yourself with Mono (see the Dockerfile for details on how that's done).
+Replace `linux-x64` with your target runtime:
+- `linux-x64`, `linux-arm64`
+- `win-x64`
+- `osx-x64`, `osx-arm64`
 
-Mac
-======
-The above instructions for using BDInfoCLI-ng with Docker on Linux should also work for Macs, but it has not been tested.
+## Docker
+
+A Docker image is also available:
+
+```bash
+# Build the image
+docker build -t bdinfo .
+
+# Run
+docker run --rm -it -v /path/to/disc:/mnt/bd bdinfo /mnt/bd
+
+# With separate report output:
+docker run --rm -it -v /path/to/disc:/mnt/bd -v /path/to/report:/mnt/report bdinfo /mnt/bd /mnt/report
+```
+
+## License
+
+LGPL-2.1 - See [LICENSE](LICENSE) for details.
