@@ -475,7 +475,7 @@ namespace BDInfo
             }
 
             Playlists = playlists;
-            int dataSize = 16384;
+            int dataSize = 65536; // 64KB buffer for better I/O throughput
             Stream fileStream = null;
             try
             {                

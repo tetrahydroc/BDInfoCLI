@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Text;
 
 namespace BDInfo
 {
@@ -60,20 +61,20 @@ namespace BDInfo
                 reportFile = File.CreateText(Path.Combine(savePath, reportName));
             }
 
-            string report = "";
+            StringBuilder report = new StringBuilder(32768);
             string protection = (BDROM.IsBDPlus ? "BD+" : BDROM.IsUHD ? "AACS2" : "AACS");
 
             if (!string.IsNullOrEmpty(BDROM.DiscTitle))
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-16}{1}\r\n", "Disc Title:",
                     BDROM.DiscTitle);
-            report += string.Format(CultureInfo.InvariantCulture,
+            report.AppendFormat(CultureInfo.InvariantCulture,
                 "{0,-16}{1}\r\n", "Disc Label:",
                 BDROM.VolumeLabel);
-            report += string.Format(CultureInfo.InvariantCulture,
+            report.AppendFormat(CultureInfo.InvariantCulture,
                 "{0,-16}{1:N0} bytes\r\n", "Disc Size:",
                 BDROM.Size);
-            report += string.Format(CultureInfo.InvariantCulture,
+            report.AppendFormat(CultureInfo.InvariantCulture,
                 "{0,-16}{1}\r\n", "Protection:",
                 protection);
 
@@ -104,45 +105,45 @@ namespace BDInfo
             }
             if (extraFeatures.Count > 0)
             {
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-16}{1}\r\n", "Extras:",
                     string.Join(", ", extraFeatures.ToArray()));
             }
-            report += string.Format(CultureInfo.InvariantCulture,
+            report.AppendFormat(CultureInfo.InvariantCulture,
                 "{0,-16}{1}\r\n", "BDInfo:",
                 ProductVersion);
 
-            report += "\r\n";
-            report += string.Format(CultureInfo.InvariantCulture,
+            report.Append("\r\n");
+            report.AppendFormat(CultureInfo.InvariantCulture,
                 "{0,-16}{1}\r\n", "Notes:", "");
-            report += "\r\n";
-            report += "BDINFO HOME:\r\n";
-            report += "  Cinema Squid (old)\r\n";
-            report += "    http://www.cinemasquid.com/blu-ray/tools/bdinfo\r\n";
-            report += "  UniqProject GitHub (new)\r\n";
-            report += "   https://github.com/UniqProject/BDInfo\r\n";
-            report += "\r\n";
-            report += "INCLUDES FORUMS REPORT FOR:\r\n";
-            report += "  AVS Forum Blu-ray Audio and Video Specifications Thread\r\n";
-            report += "    http://www.avsforum.com/avs-vb/showthread.php?t=1155731\r\n";
-            report += "\r\n";
+            report.Append("\r\n");
+            report.Append("BDINFO HOME:\r\n");
+            report.Append("  Cinema Squid (old)\r\n");
+            report.Append("    http://www.cinemasquid.com/blu-ray/tools/bdinfo\r\n");
+            report.Append("  UniqProject GitHub (new)\r\n");
+            report.Append("   https://github.com/UniqProject/BDInfo\r\n");
+            report.Append("\r\n");
+            report.Append("INCLUDES FORUMS REPORT FOR:\r\n");
+            report.Append("  AVS Forum Blu-ray Audio and Video Specifications Thread\r\n");
+            report.Append("    http://www.avsforum.com/avs-vb/showthread.php?t=1155731\r\n");
+            report.Append("\r\n");
 
             if (scanResult.ScanException != null)
             {
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "WARNING: Report is incomplete because: {0}\r\n",
                     scanResult.ScanException.Message);
             }
             if (scanResult.FileExceptions.Count > 0)
             {
-                report += "WARNING: File errors were encountered during scan:\r\n";
+                report.Append("WARNING: File errors were encountered during scan:\r\n");
                 foreach (string fileName in scanResult.FileExceptions.Keys)
                 {
                     Exception fileException = scanResult.FileExceptions[fileName];
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "\r\n{0}\t{1}\r\n",
                         fileName, fileException.Message);
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0}\r\n",
                         fileException.StackTrace);
                 }
@@ -150,7 +151,7 @@ namespace BDInfo
 
             foreach (TSPlaylistFile playlist in playlists)
             {
-                string summary = "";
+                StringBuilder summary = new StringBuilder(4096);
 
                 string title = playlist.Name;
                 string discSize = string.Format(CultureInfo.InvariantCulture,
@@ -325,146 +326,146 @@ namespace BDInfo
                     }
                 }
 
-                report += "\r\n";
-                report += "********************\r\n";
-                report += "PLAYLIST: " + playlist.Name + "\r\n";
-                report += "********************\r\n";
-                report += "\r\n";
-                report += "<--- BEGIN FORUMS PASTE --->\r\n";
-                report += "[code]\r\n";
+                report.Append("\r\n");
+                report.Append("********************\r\n");
+                report.Append("PLAYLIST: " + playlist.Name + "\r\n";
+                report.Append("********************\r\n");
+                report.Append("\r\n");
+                report.Append("<--- BEGIN FORUMS PASTE --->\r\n");
+                report.Append("[code]\r\n");
 
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-64}{1,-8}{2,-8}{3,-16}{4,-16}{5,-8}{6,-8}{7,-42}{8}\r\n",
                     "", "", "", "", "", "Total", "Video", "", "");
 
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-64}{1,-8}{2,-8}{3,-16}{4,-16}{5,-8}{6,-8}{7,-42}{8}\r\n",
                     "Title", "Codec", "Length", "Movie Size", "Disc Size",
                     "Bitrate", "Bitrate", "Main Audio Track", "Secondary Audio Track");
 
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-64}{1,-8}{2,-8}{3,-16}{4,-16}{5,-8}{6,-8}{7,-42}{8}\r\n",
                     "-----", "------", "-------", "--------------", "--------------",
                     "-------", "-------", "------------------", "---------------------");
 
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-64}{1,-8}{2,-8}{3,-16}{4,-16}{5,-8}{6,-8}{7,-42}{8}\r\n",
                     title, videoCodec, totalLengthShort, totalSize, discSize,
                     totalBitrate, videoBitrate, audio1, audio2);
 
-                report += "[/code]\r\n";
-                report += "\r\n";
-                report += "[code]\r\n";
+                report.Append("[/code]\r\n");
+                report.Append("\r\n");
+                report.Append("[code]\r\n");
 
-                report += "\r\n";
-                report += "DISC INFO:\r\n";
-                report += "\r\n";
+                report.Append("\r\n");
+                report.Append("DISC INFO:\r\n");
+                report.Append("\r\n");
 
                 if (!string.IsNullOrEmpty(BDROM.DiscTitle))
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-16}{1}\r\n", "Disc Title:", BDROM.DiscTitle);
 
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-16}{1}\r\n", "Disc Label:", BDROM.VolumeLabel);
 
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-16}{1:N0} bytes\r\n", "Disc Size:", BDROM.Size);
 
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-16}{1}\r\n", "Protection:", protection);
 
                 if (extraFeatures.Count > 0)
                 {
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-16}{1}\r\n", "Extras:", string.Join(", ", extraFeatures.ToArray()));
                 }
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-16}{1}\r\n", "BDInfo:", ProductVersion);
 
-                report += "\r\n";
-                report += "PLAYLIST REPORT:\r\n";
-                report += "\r\n";
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.Append("\r\n");
+                report.Append("PLAYLIST REPORT:\r\n");
+                report.Append("\r\n");
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-24}{1}\r\n", "Name:", title);
 
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-24}{1} (h:m:s.ms)\r\n", "Length:", totalLength);
 
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-24}{1:N0} bytes\r\n", "Size:", totalSize);
 
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-24}{1} Mbps\r\n", "Total Bitrate:", totalBitrate);
                 if (playlist.AngleCount > 0)
                 {
                     for (int angleIndex = 0; angleIndex < playlist.AngleCount; angleIndex++)
                     {
-                        report += "\r\n";
-                        report += string.Format(CultureInfo.InvariantCulture,
+                        report.Append("\r\n");
+                        report.AppendFormat(CultureInfo.InvariantCulture,
                             "{0,-24}{1} (h:m:s.ms) / {2} (h:m:s.ms)\r\n",
                             string.Format(CultureInfo.InvariantCulture, "Angle {0} Length:", angleIndex + 1),
                             angleLengths[angleIndex], angleTotalLengths[angleIndex]);
 
-                        report += string.Format(CultureInfo.InvariantCulture,
+                        report.AppendFormat(CultureInfo.InvariantCulture,
                             "{0,-24}{1:N0} bytes / {2:N0} bytes\r\n",
                             string.Format(CultureInfo.InvariantCulture, "Angle {0} Size:", angleIndex + 1),
                             angleSizes[angleIndex], angleTotalSizes[angleIndex]);
 
-                        report += string.Format(CultureInfo.InvariantCulture,
+                        report.AppendFormat(CultureInfo.InvariantCulture,
                             "{0,-24}{1} Mbps / {2} Mbps\r\n",
                             string.Format(CultureInfo.InvariantCulture, "Angle {0} Total Bitrate:", angleIndex + 1),
                             angleBitrates[angleIndex], angleTotalBitrates[angleIndex], angleIndex);
                     }
-                    report += "\r\n";
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.Append("\r\n");
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-24}{1} (h:m:s.ms)\r\n", "All Angles Length:", totalAngleLength);
 
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-24}{1} bytes\r\n", "All Angles Size:", totalAngleSize);
 
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-24}{1} Mbps\r\n", "All Angles Bitrate:", totalAngleBitrate);
                 }
 
                 if (!string.IsNullOrEmpty(BDROM.DiscTitle))
-                    summary += string.Format(CultureInfo.InvariantCulture,
+                    summary.AppendFormat(CultureInfo.InvariantCulture,
                         "Disc Title: {0}\r\n", BDROM.DiscTitle);
 
-                summary += string.Format(CultureInfo.InvariantCulture,
+                summary.AppendFormat(CultureInfo.InvariantCulture,
                     "Disc Label: {0}\r\n", BDROM.VolumeLabel);
 
-                summary += string.Format(CultureInfo.InvariantCulture,
+                summary.AppendFormat(CultureInfo.InvariantCulture,
                     "Disc Size: {0:N0} bytes\r\n", BDROM.Size);
 
-                summary += string.Format(CultureInfo.InvariantCulture,
+                summary.AppendFormat(CultureInfo.InvariantCulture,
                     "Protection: {0}\r\n", protection);
 
-                summary += string.Format(CultureInfo.InvariantCulture,
+                summary.AppendFormat(CultureInfo.InvariantCulture,
                     "Playlist: {0}\r\n", title);
 
-                summary += string.Format(CultureInfo.InvariantCulture,
+                summary.AppendFormat(CultureInfo.InvariantCulture,
                     "Size: {0:N0} bytes\r\n", totalSize);
 
-                summary += string.Format(CultureInfo.InvariantCulture,
+                summary.AppendFormat(CultureInfo.InvariantCulture,
                     "Length: {0}\r\n", totalLength);
 
-                summary += string.Format(CultureInfo.InvariantCulture,
+                summary.AppendFormat(CultureInfo.InvariantCulture,
                     "Total Bitrate: {0} Mbps\r\n", totalBitrate);
 
                 if (playlist.HasHiddenTracks)
                 {
-                    report += "\r\n(*) Indicates included stream hidden by this playlist.\r\n";
+                    report.Append("\r\n(*) Indicates included stream hidden by this playlist.\r\n");
                 }
 
                 if (playlist.VideoStreams.Count > 0)
                 {
-                    report += "\r\n";
-                    report += "VIDEO:\r\n";
-                    report += "\r\n";
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.Append("\r\n");
+                    report.Append("VIDEO:\r\n");
+                    report.Append("\r\n");
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-24}{1,-20}{2,-16}\r\n",
                         "Codec", "Bitrate", "Description");
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-24}{1,-20}{2,-16}\r\n",
                         "-----", "-------", "-----------");
 
@@ -490,13 +491,13 @@ namespace BDInfo
                         }
                         streamBitrate += " kbps";
 
-                        report += string.Format(CultureInfo.InvariantCulture,
+                        report.AppendFormat(CultureInfo.InvariantCulture,
                             "{0,-24}{1,-20}{2,-16}\r\n",
                             (stream.IsHidden ? "* " : "") + streamName,
                             streamBitrate,
                             stream.Description);
 
-                        summary += string.Format(CultureInfo.InvariantCulture,
+                        summary.AppendFormat(CultureInfo.InvariantCulture,
                             (stream.IsHidden ? "* " : "") + "Video: {0} / {1} / {2}\r\n",
                             streamName,
                             streamBitrate,
@@ -506,13 +507,13 @@ namespace BDInfo
 
                 if (playlist.AudioStreams.Count > 0)
                 {
-                    report += "\r\n";
-                    report += "AUDIO:\r\n";
-                    report += "\r\n";
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.Append("\r\n");
+                    report.Append("AUDIO:\r\n");
+                    report.Append("\r\n");
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
                         "Codec", "Language", "Bitrate", "Description");
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
                         "-----", "--------", "-------", "-----------");
 
@@ -524,14 +525,14 @@ namespace BDInfo
                             "{0:D} kbps",
                             (int)Math.Round((double)stream.BitRate / 1000));
 
-                        report += string.Format(CultureInfo.InvariantCulture,
+                        report.AppendFormat(CultureInfo.InvariantCulture,
                             "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
                             (stream.IsHidden ? "* " : "") + stream.CodecName,
                             stream.LanguageName,
                             streamBitrate,
                             stream.Description);
 
-                        summary += string.Format(
+                        summary.AppendFormat(
                             (stream.IsHidden ? "* " : "") + "Audio: {0} / {1} / {2}\r\n",
                             stream.LanguageName,
                             stream.CodecName,
@@ -541,13 +542,13 @@ namespace BDInfo
 
                 if (playlist.GraphicsStreams.Count > 0)
                 {
-                    report += "\r\n";
-                    report += "SUBTITLES:\r\n";
-                    report += "\r\n";
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.Append("\r\n");
+                    report.Append("SUBTITLES:\r\n");
+                    report.Append("\r\n");
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
                         "Codec", "Language", "Bitrate", "Description");
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
                         "-----", "--------", "-------", "-----------");
 
@@ -559,14 +560,14 @@ namespace BDInfo
                             "{0:F3} kbps",
                             (double)stream.BitRate / 1000);
 
-                        report += string.Format(CultureInfo.InvariantCulture,
+                        report.AppendFormat(CultureInfo.InvariantCulture,
                             "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
                             (stream.IsHidden ? "* " : "") + stream.CodecName,
                             stream.LanguageName,
                             streamBitrate,
                             stream.Description);
 
-                        summary += string.Format(CultureInfo.InvariantCulture,
+                        summary.AppendFormat(CultureInfo.InvariantCulture,
                             (stream.IsHidden ? "* " : "") + "Subtitle: {0} / {1}\r\n",
                             stream.LanguageName,
                             streamBitrate,
@@ -576,13 +577,13 @@ namespace BDInfo
 
                 if (playlist.TextStreams.Count > 0)
                 {
-                    report += "\r\n";
-                    report += "TEXT:\r\n";
-                    report += "\r\n";
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.Append("\r\n");
+                    report.Append("TEXT:\r\n");
+                    report.Append("\r\n");
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
                         "Codec", "Language", "Bitrate", "Description");
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
                         "-----", "--------", "-------", "-----------");
 
@@ -594,7 +595,7 @@ namespace BDInfo
                             "{0:F3} kbps",
                             (double)stream.BitRate / 1000);
 
-                        report += string.Format(CultureInfo.InvariantCulture,
+                        report.AppendFormat(CultureInfo.InvariantCulture,
                             "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
                             (stream.IsHidden ? "* " : "") + stream.CodecName,
                             stream.LanguageName,
@@ -603,13 +604,13 @@ namespace BDInfo
                     }
                 }
 
-                report += "\r\n";
-                report += "FILES:\r\n";
-                report += "\r\n";
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.Append("\r\n");
+                report.Append("FILES:\r\n");
+                report.Append("\r\n");
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}\r\n",
                     "Name", "Time In", "Length", "Size", "Total Bitrate");
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}\r\n",
                     "----", "-------", "------", "----", "-------------");
 
@@ -649,7 +650,7 @@ namespace BDInfo
                     string clipBitrate = Math.Round(
                         (double)clip.PacketBitRate / 1000).ToString("N0", CultureInfo.InvariantCulture);
 
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}\r\n",
                         clipName,
                         clipTimeIn,
@@ -658,15 +659,15 @@ namespace BDInfo
                         clipBitrate);
                 }
 
-                report += "\r\n";
-                report += "CHAPTERS:\r\n";
-                report += "\r\n";
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.Append("\r\n");
+                report.Append("CHAPTERS:\r\n");
+                report.Append("\r\n");
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}{5,-16}{6,-16}{7,-16}{8,-16}{9,-16}{10,-16}{11,-16}{12,-16}\r\n",
                     "Number", "Time In", "Length", "Avg Video Rate", "Max 1-Sec Rate",
                     "Max 1-Sec Time", "Max 5-Sec Rate", "Max 5-Sec Time", "Max 10Sec Rate",
                     "Max 10Sec Time", "Avg Frame Size", "Max Frame Size", "Max Frame Time");
-                report += string.Format(CultureInfo.InvariantCulture,
+                report.AppendFormat(CultureInfo.InvariantCulture,
                     "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}{5,-16}{6,-16}{7,-16}{8,-16}{9,-16}{10,-16}{11,-16}{12,-16}\r\n",
                     "------", "-------", "------", "--------------", "--------------",
                     "--------------", "--------------", "--------------", "--------------",
@@ -859,7 +860,7 @@ namespace BDInfo
                             chapterAvgFrameSize = chapterBits / chapterFrameCount / 8;
                         }
 
-                        report += string.Format(CultureInfo.InvariantCulture,
+                        report.AppendFormat(CultureInfo.InvariantCulture,
                             "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}{5,-16}{6,-16}{7,-16}{8,-16}{9,-16}{10,-16}{11,-16}{12,-16}\r\n",
                             chapterIndex,
                             string.Format(CultureInfo.InvariantCulture, "{0:D1}:{1:D2}:{2:D2}.{3:D3}", chapterStartSpan.Hours, chapterStartSpan.Minutes, chapterStartSpan.Seconds, chapterStartSpan.Milliseconds),
@@ -906,13 +907,13 @@ namespace BDInfo
 
                 if (BDInfoSettings.GenerateStreamDiagnostics)
                 {
-                    report += "\r\n";
-                    report += "STREAM DIAGNOSTICS:\r\n";
-                    report += "\r\n";
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.Append("\r\n");
+                    report.Append("STREAM DIAGNOSTICS:\r\n");
+                    report.Append("\r\n");
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-16}{1,-16}{2,-16}{3,-16}{4,-24}{5,-24}{6,-24}{7,-16}{8,-16}\r\n",
                         "File", "PID", "Type", "Codec", "Language", "Seconds", "Bitrate", "Bytes", "Packets");
-                    report += string.Format(CultureInfo.InvariantCulture,
+                    report.AppendFormat(CultureInfo.InvariantCulture,
                         "{0,-16}{1,-16}{2,-16}{3,-16}{4,-24}{5,-24}{6,-24}{7,-16}{8,-16}\r\n",
                         "----", "---", "----", "-----", "--------", "--------------", "--------------", "-------------", "-------");
 
@@ -951,7 +952,7 @@ namespace BDInfo
                                     "{0} ({1})", playlistStream.LanguageCode, playlistStream.LanguageName);
                             }
 
-                            report += string.Format(CultureInfo.InvariantCulture,
+                            report.AppendFormat(CultureInfo.InvariantCulture,
                                 "{0,-16}{1,-16}{2,-16}{3,-16}{4,-24}{5,-24}{6,-24}{7,-16}{8,-16}\r\n",
                                 clipName,
                                 string.Format(CultureInfo.InvariantCulture, "{0} (0x{1:X})", clipStream.PID, clipStream.PID),
@@ -966,30 +967,30 @@ namespace BDInfo
                     }
                 }
 
-                report += "\r\n";
-                report += "[/code]\r\n";
-                report += "<---- END FORUMS PASTE ---->\r\n";
-                report += "\r\n";
+                report.Append("\r\n");
+                report.Append("[/code]\r\n");
+                report.Append("<---- END FORUMS PASTE ---->\r\n");
+                report.Append("\r\n");
 
                 if (BDInfoSettings.GenerateTextSummary)
                 {
-                    report += "QUICK SUMMARY:\r\n\r\n";
-                    report += summary;
-                    report += "\r\n";
+                    report.Append("QUICK SUMMARY:\r\n\r\n");
+                    report.Append(summary);
+                    report.Append("\r\n");
                 }
 
                 if ((BDInfoSettings.AutosaveReport || savePath != null) && reportFile != null)
                 {
-                    try { reportFile.Write(report); }
+                    try { reportFile.Write(report.ToString()); }
                     catch { }
                 }
-                report = "";
+                report.Clear();
                 GC.Collect();
             }
 
             if ((BDInfoSettings.AutosaveReport || savePath != null) && reportFile != null)
             {
-                try { reportFile.Write(report); }
+                try { reportFile.Write(report.ToString()); }
                 catch { }
             }
 
