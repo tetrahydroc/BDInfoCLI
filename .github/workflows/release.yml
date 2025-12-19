@@ -1,8 +1,9 @@
 name: Build and Release
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v0.8.0, v1.0.0, etc.
   workflow_dispatch:  # Manual trigger from Actions tab
 
 jobs:
@@ -60,34 +61,27 @@ jobs:
           cd publish
           Compress-Archive -Path ${{ matrix.artifact }} -DestinationPath ${{ matrix.artifact }}.zip
 
-      # Upload to release (only on release event)
-      - name: Upload to Release (Linux/macOS)
-        if: github.event_name == 'release' && runner.os != 'Windows'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: publish/${{ matrix.artifact }}.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload to Release (Windows)
-        if: github.event_name == 'release' && runner.os == 'Windows'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: publish/${{ matrix.artifact }}.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Upload as workflow artifact (for manual runs)
-      - name: Upload workflow artifact (Linux/macOS)
-        if: github.event_name != 'release' && runner.os != 'Windows'
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: publish/${{ matrix.artifact }}.tar.gz
+          path: publish/${{ matrix.artifact }}.*
 
-      - name: Upload workflow artifact (Windows)
-        if: github.event_name != 'release' && runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
-          path: publish/${{ matrix.artifact }}.zip
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
