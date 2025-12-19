@@ -328,7 +328,7 @@ namespace BDInfo
 
                 report.Append("\r\n");
                 report.Append("********************\r\n");
-                report.Append("PLAYLIST: " + playlist.Name + "\r\n";
+                report.Append("PLAYLIST: " + playlist.Name + "\r\n");
                 report.Append("********************\r\n");
                 report.Append("\r\n");
                 report.Append("<--- BEGIN FORUMS PASTE --->\r\n");
