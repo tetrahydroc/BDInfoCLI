@@ -1,0 +1,76 @@
+name: Build and Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            artifact: BDInfo-linux-x64
+          - os: ubuntu-latest
+            rid: linux-arm64
+            artifact: BDInfo-linux-arm64
+          - os: windows-latest
+            rid: win-x64
+            artifact: BDInfo-win-x64
+          - os: macos-latest
+            rid: osx-x64
+            artifact: BDInfo-osx-x64
+          - os: macos-latest
+            rid: osx-arm64
+            artifact: BDInfo-osx-arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore BDInfo/BDInfo.csproj
+
+      - name: Publish
+        run: |
+          dotnet publish BDInfo/BDInfo.csproj \
+            -c Release \
+            -r ${{ matrix.rid }} \
+            --self-contained true \
+            -o ./publish/${{ matrix.artifact }}
+
+      - name: Create archive (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cd publish
+          tar -czvf ${{ matrix.artifact }}.tar.gz ${{ matrix.artifact }}
+
+      - name: Create archive (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd publish
+          Compress-Archive -Path ${{ matrix.artifact }} -DestinationPath ${{ matrix.artifact }}.zip
+
+      - name: Upload Linux/macOS artifact
+        if: runner.os != 'Windows'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: publish/${{ matrix.artifact }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows artifact
+        if: runner.os == 'Windows'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: publish/${{ matrix.artifact }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

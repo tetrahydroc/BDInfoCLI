@@ -1,4 +1,4 @@
-﻿//============================================================================
+//============================================================================
 // BDInfo - Blu-ray Video and Audio Analysis Tool
 // Copyright © 2010 Cinema Squid
 //
@@ -21,53 +21,61 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Windows.Forms;
+using System.Reflection;
 
 namespace BDInfo
 {
-    public partial class FormReport : Form
+    /// <summary>
+    /// Generates BDInfo reports for disc analysis results.
+    /// </summary>
+    public class ReportGenerator
     {
-        private List<TSPlaylistFile> Playlists;
-
-        public FormReport()
+        /// <summary>
+        /// Gets the product version string.
+        /// </summary>
+        private static string ProductVersion
         {
-            InitializeComponent();
+            get
+            {
+                return Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.8.0";
+            }
         }
 
+        /// <summary>
+        /// Generate a report for the analyzed BD-ROM.
+        /// </summary>
         public void Generate(
             BDROM BDROM,
             List<TSPlaylistFile> playlists,
-            ScanBDROMResult scanResult, String savePath = null)
+            ScanBDROMResult scanResult,
+            string savePath = null)
         {
-            Playlists = playlists;
-
             StreamWriter reportFile = null;
             if (BDInfoSettings.AutosaveReport || savePath != null)
             {
-                string reportName = string.Format(  CultureInfo.InvariantCulture,
-                                                    "BDINFO.{0}.txt",
-                                                    BDROM.VolumeLabel);
-                
+                string reportName = string.Format(CultureInfo.InvariantCulture,
+                    "BDINFO.{0}.txt",
+                    BDROM.VolumeLabel);
+
                 reportFile = File.CreateText(Path.Combine(savePath, reportName));
             }
-//            textBoxReport.Text = "";
 
             string report = "";
             string protection = (BDROM.IsBDPlus ? "BD+" : BDROM.IsUHD ? "AACS2" : "AACS");
 
             if (!string.IsNullOrEmpty(BDROM.DiscTitle))
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-16}{1}\r\n", "Disc Title:",
-                                        BDROM.DiscTitle);
-            report += string.Format(    CultureInfo.InvariantCulture,
-                                        "{0,-16}{1}\r\n", "Disc Label:",
-                                        BDROM.VolumeLabel);
-            report += string.Format(    CultureInfo.InvariantCulture,
-                                        "{0,-16}{1:N0} bytes\r\n", "Disc Size:",
-                                        BDROM.Size);
-            report += string.Format(    CultureInfo.InvariantCulture,
-                                        "{0,-16}{1}\r\n", "Protection:",
-                                        protection);
+                    "{0,-16}{1}\r\n", "Disc Title:",
+                    BDROM.DiscTitle);
+            report += string.Format(CultureInfo.InvariantCulture,
+                "{0,-16}{1}\r\n", "Disc Label:",
+                BDROM.VolumeLabel);
+            report += string.Format(CultureInfo.InvariantCulture,
+                "{0,-16}{1:N0} bytes\r\n", "Disc Size:",
+                BDROM.Size);
+            report += string.Format(CultureInfo.InvariantCulture,
+                "{0,-16}{1}\r\n", "Protection:",
+                protection);
 
             List<string> extraFeatures = new List<string>();
             if (BDROM.IsUHD)
@@ -96,17 +104,17 @@ namespace BDInfo
             }
             if (extraFeatures.Count > 0)
             {
-                report += string.Format(    CultureInfo.InvariantCulture,
-                                            "{0,-16}{1}\r\n", "Extras:", 
-                                            string.Join(", ", extraFeatures.ToArray()));
+                report += string.Format(CultureInfo.InvariantCulture,
+                    "{0,-16}{1}\r\n", "Extras:",
+                    string.Join(", ", extraFeatures.ToArray()));
             }
-            report += string.Format(    CultureInfo.InvariantCulture,
-                                        "{0,-16}{1}\r\n", "BDInfo:",
-                                        Application.ProductVersion);
+            report += string.Format(CultureInfo.InvariantCulture,
+                "{0,-16}{1}\r\n", "BDInfo:",
+                ProductVersion);
 
             report += "\r\n";
-            report += string.Format(    CultureInfo.InvariantCulture,
-                                        "{0,-16}{1}\r\n", "Notes:", "");
+            report += string.Format(CultureInfo.InvariantCulture,
+                "{0,-16}{1}\r\n", "Notes:", "");
             report += "\r\n";
             report += "BDINFO HOME:\r\n";
             report += "  Cinema Squid (old)\r\n";
@@ -121,9 +129,9 @@ namespace BDInfo
 
             if (scanResult.ScanException != null)
             {
-                report += string.Format(    CultureInfo.InvariantCulture,
-                                            "WARNING: Report is incomplete because: {0}\r\n",
-                                            scanResult.ScanException.Message);
+                report += string.Format(CultureInfo.InvariantCulture,
+                    "WARNING: Report is incomplete because: {0}\r\n",
+                    scanResult.ScanException.Message);
             }
             if (scanResult.FileExceptions.Count > 0)
             {
@@ -131,62 +139,60 @@ namespace BDInfo
                 foreach (string fileName in scanResult.FileExceptions.Keys)
                 {
                     Exception fileException = scanResult.FileExceptions[fileName];
-                    report += string.Format(    CultureInfo.InvariantCulture,
-                                                "\r\n{0}\t{1}\r\n", 
-                                                fileName, fileException.Message);
-                    report += string.Format(    CultureInfo.InvariantCulture,
-                                                "{0}\r\n", 
-                                                fileException.StackTrace);
+                    report += string.Format(CultureInfo.InvariantCulture,
+                        "\r\n{0}\t{1}\r\n",
+                        fileName, fileException.Message);
+                    report += string.Format(CultureInfo.InvariantCulture,
+                        "{0}\r\n",
+                        fileException.StackTrace);
                 }
-            }            
+            }
 
             foreach (TSPlaylistFile playlist in playlists)
             {
                 string summary = "";
 
-//                comboBoxPlaylist.Items.Add(playlist);
-
                 string title = playlist.Name;
-                string discSize = string.Format(            CultureInfo.InvariantCulture,
-                                                            "{0:N0}", BDROM.Size);
+                string discSize = string.Format(CultureInfo.InvariantCulture,
+                    "{0:N0}", BDROM.Size);
 
                 TimeSpan playlistTotalLength =
                     new TimeSpan((long)(playlist.TotalLength * 10000000));
-                string totalLength = string.Format(         CultureInfo.InvariantCulture,
-                                                            "{0:D1}:{1:D2}:{2:D2}.{3:D3}",
-                                                            playlistTotalLength.Hours,
-                                                            playlistTotalLength.Minutes,
-                                                            playlistTotalLength.Seconds,
-                                                            playlistTotalLength.Milliseconds);
+                string totalLength = string.Format(CultureInfo.InvariantCulture,
+                    "{0:D1}:{1:D2}:{2:D2}.{3:D3}",
+                    playlistTotalLength.Hours,
+                    playlistTotalLength.Minutes,
+                    playlistTotalLength.Seconds,
+                    playlistTotalLength.Milliseconds);
 
-                string totalLengthShort = string.Format(    CultureInfo.InvariantCulture,
-                                                            "{0:D1}:{1:D2}:{2:D2}",
-                                                            playlistTotalLength.Hours,
-                                                            playlistTotalLength.Minutes,
-                                                            playlistTotalLength.Seconds);
+                string totalLengthShort = string.Format(CultureInfo.InvariantCulture,
+                    "{0:D1}:{1:D2}:{2:D2}",
+                    playlistTotalLength.Hours,
+                    playlistTotalLength.Minutes,
+                    playlistTotalLength.Seconds);
 
-                string totalSize = string.Format(           CultureInfo.InvariantCulture,
-                                                            "{0:N0}", playlist.TotalSize);
+                string totalSize = string.Format(CultureInfo.InvariantCulture,
+                    "{0:N0}", playlist.TotalSize);
 
-                string totalBitrate = string.Format(        CultureInfo.InvariantCulture,
-                                                            "{0:F2}",
-                                                            Math.Round((double)playlist.TotalBitRate / 10000) / 100);
+                string totalBitrate = string.Format(CultureInfo.InvariantCulture,
+                    "{0:F2}",
+                    Math.Round((double)playlist.TotalBitRate / 10000) / 100);
 
                 TimeSpan playlistAngleLength = new TimeSpan((long)(playlist.TotalAngleLength * 10000000));
 
-                string totalAngleLength = string.Format(    CultureInfo.InvariantCulture,
-                                                            "{0:D1}:{1:D2}:{2:D2}.{3:D3}",
-                                                            playlistAngleLength.Hours,
-                                                            playlistAngleLength.Minutes,
-                                                            playlistAngleLength.Seconds,
-                                                            playlistAngleLength.Milliseconds);
+                string totalAngleLength = string.Format(CultureInfo.InvariantCulture,
+                    "{0:D1}:{1:D2}:{2:D2}.{3:D3}",
+                    playlistAngleLength.Hours,
+                    playlistAngleLength.Minutes,
+                    playlistAngleLength.Seconds,
+                    playlistAngleLength.Milliseconds);
 
-                string totalAngleSize = string.Format(      CultureInfo.InvariantCulture,
-                                                            "{0:N0}", playlist.TotalAngleSize);
+                string totalAngleSize = string.Format(CultureInfo.InvariantCulture,
+                    "{0:N0}", playlist.TotalAngleSize);
 
-                string totalAngleBitrate = string.Format(   CultureInfo.InvariantCulture,
-                                                            "{0:F2}",
-                                                            Math.Round((double)playlist.TotalAngleBitRate / 10000) / 100);
+                string totalAngleBitrate = string.Format(CultureInfo.InvariantCulture,
+                    "{0:F2}",
+                    Math.Round((double)playlist.TotalAngleBitRate / 10000) / 100);
 
                 List<string> angleLengths = new List<string>();
                 List<string> angleSizes = new List<string>();
@@ -215,17 +221,17 @@ namespace BDInfo
                             }
                         }
 
-                        angleSizes.Add(string.Format(   CultureInfo.InvariantCulture, "{0:N0}", angleSize));
+                        angleSizes.Add(string.Format(CultureInfo.InvariantCulture, "{0:N0}", angleSize));
 
                         TimeSpan angleTimeSpan = new TimeSpan((long)(angleLength * 10000000));
 
-                        angleLengths.Add(string.Format( CultureInfo.InvariantCulture,
-                                                        "{0:D1}:{1:D2}:{2:D2}.{3:D3}",
-                                                        angleTimeSpan.Hours,
-                                                        angleTimeSpan.Minutes,
-                                                        angleTimeSpan.Seconds,
-                                                        angleTimeSpan.Milliseconds));
-                        
+                        angleLengths.Add(string.Format(CultureInfo.InvariantCulture,
+                            "{0:D1}:{1:D2}:{2:D2}.{3:D3}",
+                            angleTimeSpan.Hours,
+                            angleTimeSpan.Minutes,
+                            angleTimeSpan.Seconds,
+                            angleTimeSpan.Milliseconds));
+
                         angleTotalSizes.Add(string.Format(CultureInfo.InvariantCulture, "{0:N0}", angleTotalSize));
 
                         angleTotalLengths.Add(totalLength);
@@ -237,12 +243,12 @@ namespace BDInfo
                         }
                         angleBitrates.Add(string.Format(CultureInfo.InvariantCulture, "{0:F2}", angleBitrate));
 
-                        double angleTotalBitrate = 0;
+                        double angleTotalBitrateVal = 0;
                         if (playlist.TotalLength > 0)
                         {
-                            angleTotalBitrate = Math.Round((double)(angleTotalSize * 8) / playlist.TotalLength / 10000) / 100;
+                            angleTotalBitrateVal = Math.Round((double)(angleTotalSize * 8) / playlist.TotalLength / 10000) / 100;
                         }
-                        angleTotalBitrates.Add(string.Format(CultureInfo.InvariantCulture, "{0:F2}", angleTotalBitrate));
+                        angleTotalBitrates.Add(string.Format(CultureInfo.InvariantCulture, "{0:F2}", angleTotalBitrateVal));
                     }
                 }
 
@@ -267,18 +273,18 @@ namespace BDInfo
 
                     if (audioStream.BitRate > 0)
                     {
-                        audio1 += string.Format(    CultureInfo.InvariantCulture, 
-                                                    " {0}Kbps",
-                                                    (int)Math.Round((double)audioStream.BitRate/ 1000));
+                        audio1 += string.Format(CultureInfo.InvariantCulture,
+                            " {0}Kbps",
+                            (int)Math.Round((double)audioStream.BitRate / 1000));
                     }
 
                     if (audioStream.SampleRate > 0 &&
                         audioStream.BitDepth > 0)
                     {
-                        audio1 += string.Format(    CultureInfo.InvariantCulture,
-                                                    " ({0}kHz/{1}-bit)",
-                                                    (int)Math.Round((double)audioStream.SampleRate / 1000),
-                                                    audioStream.BitDepth);
+                        audio1 += string.Format(CultureInfo.InvariantCulture,
+                            " ({0}kHz/{1}-bit)",
+                            (int)Math.Round((double)audioStream.SampleRate / 1000),
+                            audioStream.BitDepth);
                     }
                 }
 
@@ -295,13 +301,13 @@ namespace BDInfo
                             !(audioStream.StreamType == TSStreamType.AC3_AUDIO &&
                               audioStream.ChannelCount == 2))
                         {
-                            audio2 = string.Format(         CultureInfo.InvariantCulture,
-                                                            "{0} {1}",
-                                                            audioStream.CodecAltName, audioStream.ChannelDescription);
+                            audio2 = string.Format(CultureInfo.InvariantCulture,
+                                "{0} {1}",
+                                audioStream.CodecAltName, audioStream.ChannelDescription);
 
                             if (audioStream.BitRate > 0)
                             {
-                                audio2 += string.Format(    CultureInfo.InvariantCulture,
+                                audio2 += string.Format(CultureInfo.InvariantCulture,
                                     " {0}Kbps",
                                     (int)Math.Round((double)audioStream.BitRate / 1000));
                             }
@@ -309,10 +315,10 @@ namespace BDInfo
                             if (audioStream.SampleRate > 0 &&
                                 audioStream.BitDepth > 0)
                             {
-                                audio2 += string.Format(    CultureInfo.InvariantCulture,
-                                                            " ({0}kHz/{1}-bit)",
-                                                            (int)Math.Round((double)audioStream.SampleRate / 1000),
-                                                            audioStream.BitDepth);
+                                audio2 += string.Format(CultureInfo.InvariantCulture,
+                                    " ({0}kHz/{1}-bit)",
+                                    (int)Math.Round((double)audioStream.SampleRate / 1000),
+                                    audioStream.BitDepth);
                             }
                             break;
                         }
@@ -328,52 +334,23 @@ namespace BDInfo
                 report += "[code]\r\n";
 
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-64}{1,-8}{2,-8}{3,-16}{4,-16}{5,-8}{6,-8}{7,-42}{8}\r\n",
-                                        "",
-                                        "",
-                                        "",
-                                        "",
-                                        "",
-                                        "Total",
-                                        "Video",
-                                        "",
-                                        "");
+                    "{0,-64}{1,-8}{2,-8}{3,-16}{4,-16}{5,-8}{6,-8}{7,-42}{8}\r\n",
+                    "", "", "", "", "", "Total", "Video", "", "");
 
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-64}{1,-8}{2,-8}{3,-16}{4,-16}{5,-8}{6,-8}{7,-42}{8}\r\n",
-                                        "Title",
-                                        "Codec",
-                                        "Length",
-                                        "Movie Size",
-                                        "Disc Size",
-                                        "Bitrate",
-                                        "Bitrate",
-                                        "Main Audio Track",
-                                        "Secondary Audio Track");
+                    "{0,-64}{1,-8}{2,-8}{3,-16}{4,-16}{5,-8}{6,-8}{7,-42}{8}\r\n",
+                    "Title", "Codec", "Length", "Movie Size", "Disc Size",
+                    "Bitrate", "Bitrate", "Main Audio Track", "Secondary Audio Track");
 
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-64}{1,-8}{2,-8}{3,-16}{4,-16}{5,-8}{6,-8}{7,-42}{8}\r\n",
-                                        "-----",
-                                        "------",
-                                        "-------",
-                                        "--------------",
-                                        "--------------",
-                                        "-------",
-                                        "-------",
-                                        "------------------",
-                                        "---------------------");
+                    "{0,-64}{1,-8}{2,-8}{3,-16}{4,-16}{5,-8}{6,-8}{7,-42}{8}\r\n",
+                    "-----", "------", "-------", "--------------", "--------------",
+                    "-------", "-------", "------------------", "---------------------");
 
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-64}{1,-8}{2,-8}{3,-16}{4,-16}{5,-8}{6,-8}{7,-42}{8}\r\n",
-                                        title,
-                                        videoCodec,
-                                        totalLengthShort,
-                                        totalSize,
-                                        discSize,
-                                        totalBitrate,
-                                        videoBitrate,
-                                        audio1,
-                                        audio2);
+                    "{0,-64}{1,-8}{2,-8}{3,-16}{4,-16}{5,-8}{6,-8}{7,-42}{8}\r\n",
+                    title, videoCodec, totalLengthShort, totalSize, discSize,
+                    totalBitrate, videoBitrate, audio1, audio2);
 
                 report += "[/code]\r\n";
                 report += "\r\n";
@@ -385,97 +362,94 @@ namespace BDInfo
 
                 if (!string.IsNullOrEmpty(BDROM.DiscTitle))
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-16}{1}\r\n", "Disc Title:", BDROM.DiscTitle);
+                        "{0,-16}{1}\r\n", "Disc Title:", BDROM.DiscTitle);
 
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-16}{1}\r\n", "Disc Label:", BDROM.VolumeLabel);
+                    "{0,-16}{1}\r\n", "Disc Label:", BDROM.VolumeLabel);
 
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-16}{1:N0} bytes\r\n", "Disc Size:", BDROM.Size);
+                    "{0,-16}{1:N0} bytes\r\n", "Disc Size:", BDROM.Size);
 
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-16}{1}\r\n", "Protection:", protection);
+                    "{0,-16}{1}\r\n", "Protection:", protection);
 
                 if (extraFeatures.Count > 0)
                 {
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-16}{1}\r\n", "Extras:", string.Join(", ", extraFeatures.ToArray()));
+                        "{0,-16}{1}\r\n", "Extras:", string.Join(", ", extraFeatures.ToArray()));
                 }
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-16}{1}\r\n", "BDInfo:", Application.ProductVersion);
+                    "{0,-16}{1}\r\n", "BDInfo:", ProductVersion);
 
                 report += "\r\n";
                 report += "PLAYLIST REPORT:\r\n";
                 report += "\r\n";
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-24}{1}\r\n", "Name:", title);
+                    "{0,-24}{1}\r\n", "Name:", title);
 
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-24}{1} (h:m:s.ms)\r\n", "Length:", totalLength);
+                    "{0,-24}{1} (h:m:s.ms)\r\n", "Length:", totalLength);
 
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-24}{1:N0} bytes\r\n", "Size:", totalSize);
+                    "{0,-24}{1:N0} bytes\r\n", "Size:", totalSize);
 
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-24}{1} Mbps\r\n", "Total Bitrate:", totalBitrate);
+                    "{0,-24}{1} Mbps\r\n", "Total Bitrate:", totalBitrate);
                 if (playlist.AngleCount > 0)
                 {
                     for (int angleIndex = 0; angleIndex < playlist.AngleCount; angleIndex++)
                     {
                         report += "\r\n";
                         report += string.Format(CultureInfo.InvariantCulture,
-                                                "{0,-24}{1} (h:m:s.ms) / {2} (h:m:s.ms)\r\n", 
-                                                string.Format(CultureInfo.InvariantCulture, "Angle {0} Length:", angleIndex + 1),
-                                                angleLengths[angleIndex], angleTotalLengths[angleIndex]);
+                            "{0,-24}{1} (h:m:s.ms) / {2} (h:m:s.ms)\r\n",
+                            string.Format(CultureInfo.InvariantCulture, "Angle {0} Length:", angleIndex + 1),
+                            angleLengths[angleIndex], angleTotalLengths[angleIndex]);
 
                         report += string.Format(CultureInfo.InvariantCulture,
-                                                "{0,-24}{1:N0} bytes / {2:N0} bytes\r\n", 
-                                                string.Format(CultureInfo.InvariantCulture, "Angle {0} Size:", angleIndex + 1),
-                                                angleSizes[angleIndex], angleTotalSizes[angleIndex]);
+                            "{0,-24}{1:N0} bytes / {2:N0} bytes\r\n",
+                            string.Format(CultureInfo.InvariantCulture, "Angle {0} Size:", angleIndex + 1),
+                            angleSizes[angleIndex], angleTotalSizes[angleIndex]);
 
                         report += string.Format(CultureInfo.InvariantCulture,
-                                                "{0,-24}{1} Mbps / {2} Mbps\r\n", 
-                                                string.Format(CultureInfo.InvariantCulture, "Angle {0} Total Bitrate:", angleIndex + 1),
-                                                angleBitrates[angleIndex], angleTotalBitrates[angleIndex], angleIndex);
+                            "{0,-24}{1} Mbps / {2} Mbps\r\n",
+                            string.Format(CultureInfo.InvariantCulture, "Angle {0} Total Bitrate:", angleIndex + 1),
+                            angleBitrates[angleIndex], angleTotalBitrates[angleIndex], angleIndex);
                     }
                     report += "\r\n";
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-24}{1} (h:m:s.ms)\r\n", "All Angles Length:", totalAngleLength);
+                        "{0,-24}{1} (h:m:s.ms)\r\n", "All Angles Length:", totalAngleLength);
 
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-24}{1} bytes\r\n", "All Angles Size:", totalAngleSize);
+                        "{0,-24}{1} bytes\r\n", "All Angles Size:", totalAngleSize);
 
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-24}{1} Mbps\r\n", "All Angles Bitrate:", totalAngleBitrate);
+                        "{0,-24}{1} Mbps\r\n", "All Angles Bitrate:", totalAngleBitrate);
                 }
-                /*
-                report += string.Format(
-                    "{0,-24}{1}\r\n", "Description:", "");
-                 */
+
                 if (!string.IsNullOrEmpty(BDROM.DiscTitle))
                     summary += string.Format(CultureInfo.InvariantCulture,
-                                            "Disc Title: {0}\r\n", BDROM.DiscTitle);
+                        "Disc Title: {0}\r\n", BDROM.DiscTitle);
 
                 summary += string.Format(CultureInfo.InvariantCulture,
-                                         "Disc Label: {0}\r\n", BDROM.VolumeLabel);
+                    "Disc Label: {0}\r\n", BDROM.VolumeLabel);
 
                 summary += string.Format(CultureInfo.InvariantCulture,
-                                         "Disc Size: {0:N0} bytes\r\n", BDROM.Size);
+                    "Disc Size: {0:N0} bytes\r\n", BDROM.Size);
 
                 summary += string.Format(CultureInfo.InvariantCulture,
-                                         "Protection: {0}\r\n", protection);
+                    "Protection: {0}\r\n", protection);
 
                 summary += string.Format(CultureInfo.InvariantCulture,
-                                         "Playlist: {0}\r\n", title);
+                    "Playlist: {0}\r\n", title);
 
                 summary += string.Format(CultureInfo.InvariantCulture,
-                                         "Size: {0:N0} bytes\r\n", totalSize);
+                    "Size: {0:N0} bytes\r\n", totalSize);
 
                 summary += string.Format(CultureInfo.InvariantCulture,
-                                         "Length: {0}\r\n", totalLength);
+                    "Length: {0}\r\n", totalLength);
 
                 summary += string.Format(CultureInfo.InvariantCulture,
-                                         "Total Bitrate: {0} Mbps\r\n", totalBitrate);
+                    "Total Bitrate: {0} Mbps\r\n", totalBitrate);
 
                 if (playlist.HasHiddenTracks)
                 {
@@ -488,15 +462,11 @@ namespace BDInfo
                     report += "VIDEO:\r\n";
                     report += "\r\n";
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-24}{1,-20}{2,-16}\r\n",
-                                            "Codec",
-                                            "Bitrate",
-                                            "Description");
+                        "{0,-24}{1,-20}{2,-16}\r\n",
+                        "Codec", "Bitrate", "Description");
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-24}{1,-20}{2,-16}\r\n",
-                                            "-----",
-                                            "-------",
-                                            "-----------");
+                        "{0,-24}{1,-20}{2,-16}\r\n",
+                        "-----", "-------", "-----------");
 
                     foreach (TSStream stream in playlist.SortedStreams)
                     {
@@ -506,31 +476,31 @@ namespace BDInfo
                         if (stream.AngleIndex > 0)
                         {
                             streamName += string.Format(CultureInfo.InvariantCulture,
-                                                        " ({0})", stream.AngleIndex);
+                                " ({0})", stream.AngleIndex);
                         }
 
                         string streamBitrate = string.Format(CultureInfo.InvariantCulture,
-                                                            "{0:D}",
-                                                            (int)Math.Round((double)stream.BitRate / 1000));
+                            "{0:D}",
+                            (int)Math.Round((double)stream.BitRate / 1000));
                         if (stream.AngleIndex > 0)
                         {
                             streamBitrate += string.Format(CultureInfo.InvariantCulture,
-                                                            " ({0:D})",
-                                                            (int)Math.Round((double)stream.ActiveBitRate / 1000));
+                                " ({0:D})",
+                                (int)Math.Round((double)stream.ActiveBitRate / 1000));
                         }
                         streamBitrate += " kbps";
 
                         report += string.Format(CultureInfo.InvariantCulture,
-                                                "{0,-24}{1,-20}{2,-16}\r\n",
-                                                (stream.IsHidden ? "* " : "") + streamName,
-                                                streamBitrate,
-                                                stream.Description);
+                            "{0,-24}{1,-20}{2,-16}\r\n",
+                            (stream.IsHidden ? "* " : "") + streamName,
+                            streamBitrate,
+                            stream.Description);
 
                         summary += string.Format(CultureInfo.InvariantCulture,
-                                                (stream.IsHidden ? "* " : "") + "Video: {0} / {1} / {2}\r\n",
-                                                streamName,
-                                                streamBitrate,
-                                                stream.Description);
+                            (stream.IsHidden ? "* " : "") + "Video: {0} / {1} / {2}\r\n",
+                            streamName,
+                            streamBitrate,
+                            stream.Description);
                     }
                 }
 
@@ -540,32 +510,26 @@ namespace BDInfo
                     report += "AUDIO:\r\n";
                     report += "\r\n";
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
-                                            "Codec",
-                                            "Language",
-                                            "Bitrate",
-                                            "Description");
+                        "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
+                        "Codec", "Language", "Bitrate", "Description");
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
-                                            "-----",
-                                            "--------",
-                                            "-------",
-                                            "-----------");
+                        "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
+                        "-----", "--------", "-------", "-----------");
 
                     foreach (TSStream stream in playlist.SortedStreams)
                     {
                         if (!stream.IsAudioStream) continue;
 
                         string streamBitrate = string.Format(CultureInfo.InvariantCulture,
-                                                            "{0:D} kbps",
-                                                            (int)Math.Round((double)stream.BitRate / 1000));
+                            "{0:D} kbps",
+                            (int)Math.Round((double)stream.BitRate / 1000));
 
                         report += string.Format(CultureInfo.InvariantCulture,
-                                                "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
-                                                (stream.IsHidden ? "* " : "") + stream.CodecName,
-                                                stream.LanguageName,
-                                                streamBitrate,
-                                                stream.Description);
+                            "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
+                            (stream.IsHidden ? "* " : "") + stream.CodecName,
+                            stream.LanguageName,
+                            streamBitrate,
+                            stream.Description);
 
                         summary += string.Format(
                             (stream.IsHidden ? "* " : "") + "Audio: {0} / {1} / {2}\r\n",
@@ -581,38 +545,32 @@ namespace BDInfo
                     report += "SUBTITLES:\r\n";
                     report += "\r\n";
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
-                                            "Codec",
-                                            "Language",
-                                            "Bitrate",
-                                            "Description");
+                        "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
+                        "Codec", "Language", "Bitrate", "Description");
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
-                                            "-----",
-                                            "--------",
-                                            "-------",
-                                            "-----------");
+                        "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
+                        "-----", "--------", "-------", "-----------");
 
                     foreach (TSStream stream in playlist.SortedStreams)
                     {
                         if (!stream.IsGraphicsStream) continue;
 
                         string streamBitrate = string.Format(CultureInfo.InvariantCulture,
-                                                             "{0:F3} kbps",
-                                                             (double)stream.BitRate / 1000);
+                            "{0:F3} kbps",
+                            (double)stream.BitRate / 1000);
 
                         report += string.Format(CultureInfo.InvariantCulture,
-                                                "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
-                                                (stream.IsHidden ? "* " : "") + stream.CodecName,
-                                                stream.LanguageName,
-                                                streamBitrate,
-                                                stream.Description);
+                            "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
+                            (stream.IsHidden ? "* " : "") + stream.CodecName,
+                            stream.LanguageName,
+                            streamBitrate,
+                            stream.Description);
 
                         summary += string.Format(CultureInfo.InvariantCulture,
-                                                 (stream.IsHidden ? "* " : "") + "Subtitle: {0} / {1}\r\n",
-                                                 stream.LanguageName,
-                                                 streamBitrate,
-                                                 stream.Description);
+                            (stream.IsHidden ? "* " : "") + "Subtitle: {0} / {1}\r\n",
+                            stream.LanguageName,
+                            streamBitrate,
+                            stream.Description);
                     }
                 }
 
@@ -622,32 +580,26 @@ namespace BDInfo
                     report += "TEXT:\r\n";
                     report += "\r\n";
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
-                                            "Codec",
-                                            "Language",
-                                            "Bitrate",
-                                            "Description");
+                        "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
+                        "Codec", "Language", "Bitrate", "Description");
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
-                                            "-----",
-                                            "--------",
-                                            "-------",
-                                            "-----------");
+                        "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
+                        "-----", "--------", "-------", "-----------");
 
                     foreach (TSStream stream in playlist.SortedStreams)
                     {
                         if (!stream.IsTextStream) continue;
 
                         string streamBitrate = string.Format(CultureInfo.InvariantCulture,
-                                                             "{0:F3} kbps",
-                                                             (double)stream.BitRate / 1000);
+                            "{0:F3} kbps",
+                            (double)stream.BitRate / 1000);
 
                         report += string.Format(CultureInfo.InvariantCulture,
-                                                "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
-                                                (stream.IsHidden ? "* " : "") + stream.CodecName,
-                                                stream.LanguageName,
-                                                streamBitrate,
-                                                stream.Description);
+                            "{0,-32}{1,-16}{2,-16}{3,-16}\r\n",
+                            (stream.IsHidden ? "* " : "") + stream.CodecName,
+                            stream.LanguageName,
+                            streamBitrate,
+                            stream.Description);
                     }
                 }
 
@@ -655,19 +607,11 @@ namespace BDInfo
                 report += "FILES:\r\n";
                 report += "\r\n";
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}\r\n",
-                                        "Name",
-                                        "Time In",
-                                        "Length",
-                                        "Size",
-                                        "Total Bitrate");
+                    "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}\r\n",
+                    "Name", "Time In", "Length", "Size", "Total Bitrate");
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}\r\n",
-                                        "----",
-                                        "-------",
-                                        "------",
-                                        "----",
-                                        "-------------");
+                    "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}\r\n",
+                    "----", "-------", "------", "----", "-------------");
 
                 foreach (TSStreamClip clip in playlist.StreamClips)
                 {
@@ -676,11 +620,11 @@ namespace BDInfo
                     if (clip.AngleIndex > 0)
                     {
                         clipName += string.Format(CultureInfo.InvariantCulture,
-                                                  " ({0})", clip.AngleIndex);
+                            " ({0})", clip.AngleIndex);
                     }
 
                     string clipSize = string.Format(CultureInfo.InvariantCulture,
-                                                    "{0:N0}", clip.PacketSize);
+                        "{0:N0}", clip.PacketSize);
 
                     TimeSpan clipInSpan =
                         new TimeSpan((long)(clip.RelativeTimeIn * 10000000));
@@ -689,64 +633,44 @@ namespace BDInfo
                     TimeSpan clipLengthSpan =
                         new TimeSpan((long)(clip.Length * 10000000));
 
-                    string clipTimeIn = string.Format(  CultureInfo.InvariantCulture,
-                                                        "{0:D1}:{1:D2}:{2:D2}.{3:D3}",
-                                                        clipInSpan.Hours,
-                                                        clipInSpan.Minutes,
-                                                        clipInSpan.Seconds,
-                                                        clipInSpan.Milliseconds);
+                    string clipTimeIn = string.Format(CultureInfo.InvariantCulture,
+                        "{0:D1}:{1:D2}:{2:D2}.{3:D3}",
+                        clipInSpan.Hours,
+                        clipInSpan.Minutes,
+                        clipInSpan.Seconds,
+                        clipInSpan.Milliseconds);
                     string clipLength = string.Format(CultureInfo.InvariantCulture,
-                                                      "{0:D1}:{1:D2}:{2:D2}.{3:D3}",
-                                                      clipLengthSpan.Hours,
-                                                      clipLengthSpan.Minutes,
-                                                      clipLengthSpan.Seconds,
-                                                      clipLengthSpan.Milliseconds);
+                        "{0:D1}:{1:D2}:{2:D2}.{3:D3}",
+                        clipLengthSpan.Hours,
+                        clipLengthSpan.Minutes,
+                        clipLengthSpan.Seconds,
+                        clipLengthSpan.Milliseconds);
 
                     string clipBitrate = Math.Round(
                         (double)clip.PacketBitRate / 1000).ToString("N0", CultureInfo.InvariantCulture);
 
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}\r\n",
-                                            clipName,
-                                            clipTimeIn,
-                                            clipLength,
-                                            clipSize,
-                                            clipBitrate);
+                        "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}\r\n",
+                        clipName,
+                        clipTimeIn,
+                        clipLength,
+                        clipSize,
+                        clipBitrate);
                 }
 
                 report += "\r\n";
                 report += "CHAPTERS:\r\n";
                 report += "\r\n";
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}{5,-16}{6,-16}{7,-16}{8,-16}{9,-16}{10,-16}{11,-16}{12,-16}\r\n",
-                                        "Number",
-                                        "Time In",
-                                        "Length",
-                                        "Avg Video Rate",
-                                        "Max 1-Sec Rate",
-                                        "Max 1-Sec Time",
-                                        "Max 5-Sec Rate",
-                                        "Max 5-Sec Time",
-                                        "Max 10Sec Rate",
-                                        "Max 10Sec Time",
-                                        "Avg Frame Size",
-                                        "Max Frame Size",
-                                        "Max Frame Time");
+                    "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}{5,-16}{6,-16}{7,-16}{8,-16}{9,-16}{10,-16}{11,-16}{12,-16}\r\n",
+                    "Number", "Time In", "Length", "Avg Video Rate", "Max 1-Sec Rate",
+                    "Max 1-Sec Time", "Max 5-Sec Rate", "Max 5-Sec Time", "Max 10Sec Rate",
+                    "Max 10Sec Time", "Avg Frame Size", "Max Frame Size", "Max Frame Time");
                 report += string.Format(CultureInfo.InvariantCulture,
-                                        "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}{5,-16}{6,-16}{7,-16}{8,-16}{9,-16}{10,-16}{11,-16}{12,-16}\r\n",
-                                        "------",
-                                        "-------",
-                                        "------",
-                                        "--------------",
-                                        "--------------",
-                                        "--------------",
-                                        "--------------",
-                                        "--------------",
-                                        "--------------",
-                                        "--------------",
-                                        "--------------",
-                                        "--------------",
-                                        "--------------");
+                    "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}{5,-16}{6,-16}{7,-16}{8,-16}{9,-16}{10,-16}{11,-16}{12,-16}\r\n",
+                    "------", "-------", "------", "--------------", "--------------",
+                    "--------------", "--------------", "--------------", "--------------",
+                    "--------------", "--------------", "--------------", "--------------");
 
                 Queue<double> window1Bits = new Queue<double>();
                 Queue<double> window1Seconds = new Queue<double>();
@@ -776,7 +700,7 @@ namespace BDInfo
                 double chapterMaxFrameSize = 0;
                 double chapterMaxFrameLocation = 0;
 
-                ushort diagPID  = playlist.VideoStreams[0].PID;
+                ushort diagPID = playlist.VideoStreams[0].PID;
 
                 int chapterIndex = 0;
                 int clipIndex = 0;
@@ -936,20 +860,20 @@ namespace BDInfo
                         }
 
                         report += string.Format(CultureInfo.InvariantCulture,
-                                                "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}{5,-16}{6,-16}{7,-16}{8,-16}{9,-16}{10,-16}{11,-16}{12,-16}\r\n",
-                                                chapterIndex,
-                                                string.Format(CultureInfo.InvariantCulture, "{0:D1}:{1:D2}:{2:D2}.{3:D3}", chapterStartSpan.Hours, chapterStartSpan.Minutes, chapterStartSpan.Seconds, chapterStartSpan.Milliseconds),
-                                                string.Format(CultureInfo.InvariantCulture, "{0:D1}:{1:D2}:{2:D2}.{3:D3}", chapterLengthSpan.Hours, chapterLengthSpan.Minutes, chapterLengthSpan.Seconds, chapterLengthSpan.Milliseconds),
-                                                string.Format(CultureInfo.InvariantCulture, "{0:N0} kbps", Math.Round(chapterBitrate / 1000)),
-                                                string.Format(CultureInfo.InvariantCulture, "{0:N0} kbps", Math.Round(window1PeakBitrate / 1000)),
-                                                string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}:{2:D2}.{3:D3}", window1PeakSpan.Hours, window1PeakSpan.Minutes, window1PeakSpan.Seconds, window1PeakSpan.Milliseconds),
-                                                string.Format(CultureInfo.InvariantCulture, "{0:N0} kbps", Math.Round(window5PeakBitrate / 1000)),
-                                                string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}:{2:D2}.{3:D3}", window5PeakSpan.Hours, window5PeakSpan.Minutes, window5PeakSpan.Seconds, window5PeakSpan.Milliseconds),
-                                                string.Format(CultureInfo.InvariantCulture, "{0:N0} kbps", Math.Round(window10PeakBitrate / 1000)),
-                                                string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}:{2:D2}.{3:D3}", window10PeakSpan.Hours, window10PeakSpan.Minutes, window10PeakSpan.Seconds, window10PeakSpan.Milliseconds),
-                                                string.Format(CultureInfo.InvariantCulture, "{0:N0} bytes", chapterAvgFrameSize),
-                                                string.Format(CultureInfo.InvariantCulture, "{0:N0} bytes", chapterMaxFrameSize),
-                                                string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}:{2:D2}.{3:D3}", chapterMaxFrameSpan.Hours, chapterMaxFrameSpan.Minutes, chapterMaxFrameSpan.Seconds, chapterMaxFrameSpan.Milliseconds));
+                            "{0,-16}{1,-16}{2,-16}{3,-16}{4,-16}{5,-16}{6,-16}{7,-16}{8,-16}{9,-16}{10,-16}{11,-16}{12,-16}\r\n",
+                            chapterIndex,
+                            string.Format(CultureInfo.InvariantCulture, "{0:D1}:{1:D2}:{2:D2}.{3:D3}", chapterStartSpan.Hours, chapterStartSpan.Minutes, chapterStartSpan.Seconds, chapterStartSpan.Milliseconds),
+                            string.Format(CultureInfo.InvariantCulture, "{0:D1}:{1:D2}:{2:D2}.{3:D3}", chapterLengthSpan.Hours, chapterLengthSpan.Minutes, chapterLengthSpan.Seconds, chapterLengthSpan.Milliseconds),
+                            string.Format(CultureInfo.InvariantCulture, "{0:N0} kbps", Math.Round(chapterBitrate / 1000)),
+                            string.Format(CultureInfo.InvariantCulture, "{0:N0} kbps", Math.Round(window1PeakBitrate / 1000)),
+                            string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}:{2:D2}.{3:D3}", window1PeakSpan.Hours, window1PeakSpan.Minutes, window1PeakSpan.Seconds, window1PeakSpan.Milliseconds),
+                            string.Format(CultureInfo.InvariantCulture, "{0:N0} kbps", Math.Round(window5PeakBitrate / 1000)),
+                            string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}:{2:D2}.{3:D3}", window5PeakSpan.Hours, window5PeakSpan.Minutes, window5PeakSpan.Seconds, window5PeakSpan.Milliseconds),
+                            string.Format(CultureInfo.InvariantCulture, "{0:N0} kbps", Math.Round(window10PeakBitrate / 1000)),
+                            string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}:{2:D2}.{3:D3}", window10PeakSpan.Hours, window10PeakSpan.Minutes, window10PeakSpan.Seconds, window10PeakSpan.Milliseconds),
+                            string.Format(CultureInfo.InvariantCulture, "{0:N0} bytes", chapterAvgFrameSize),
+                            string.Format(CultureInfo.InvariantCulture, "{0:N0} bytes", chapterMaxFrameSize),
+                            string.Format(CultureInfo.InvariantCulture, "{0:D2}:{1:D2}:{2:D2}.{3:D3}", chapterMaxFrameSpan.Hours, chapterMaxFrameSpan.Minutes, chapterMaxFrameSpan.Seconds, chapterMaxFrameSpan.Milliseconds));
 
                         window1Bits = new Queue<double>();
                         window1Seconds = new Queue<double>();
@@ -981,33 +905,16 @@ namespace BDInfo
                 }
 
                 if (BDInfoSettings.GenerateStreamDiagnostics)
-                {                        
+                {
                     report += "\r\n";
                     report += "STREAM DIAGNOSTICS:\r\n";
                     report += "\r\n";
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-16}{1,-16}{2,-16}{3,-16}{4,-24}{5,-24}{6,-24}{7,-16}{8,-16}\r\n",
-                                            "File",
-                                            "PID",
-                                            "Type",
-                                            "Codec",
-                                            "Language",
-                                            "Seconds",
-                                            "Bitrate",
-                                            "Bytes",
-                                            "Packets");
+                        "{0,-16}{1,-16}{2,-16}{3,-16}{4,-24}{5,-24}{6,-24}{7,-16}{8,-16}\r\n",
+                        "File", "PID", "Type", "Codec", "Language", "Seconds", "Bitrate", "Bytes", "Packets");
                     report += string.Format(CultureInfo.InvariantCulture,
-                                            "{0,-16}{1,-16}{2,-16}{3,-16}{4,-24}{5,-24}{6,-24}{7,-16}{8,-16}\r\n",
-                                            "----",
-                                            "---",
-                                            "----",
-                                            "-----",
-                                            "--------",
-                                            "--------------",
-                                            "--------------",
-                                            "-------------",
-                                            "-----",
-                                            "-------");
+                        "{0,-16}{1,-16}{2,-16}{3,-16}{4,-24}{5,-24}{6,-24}{7,-16}{8,-16}\r\n",
+                        "----", "---", "----", "-----", "--------", "--------------", "--------------", "-------------", "-------");
 
                     Dictionary<string, TSStreamClip> reportedClips = new Dictionary<string, TSStreamClip>();
                     foreach (TSStreamClip clip in playlist.StreamClips)
@@ -1025,19 +932,17 @@ namespace BDInfo
                         {
                             if (!playlist.Streams.ContainsKey(clipStream.PID)) continue;
 
-                            TSStream playlistStream = 
-                                playlist.Streams[clipStream.PID];
+                            TSStream playlistStream = playlist.Streams[clipStream.PID];
 
                             string clipBitRate = "0";
                             string clipSeconds = "0";
 
                             if (clip.StreamFile.Length > 0)
                             {
-                                clipSeconds =
-                                    clip.StreamFile.Length.ToString("F3", CultureInfo.InvariantCulture);
+                                clipSeconds = clip.StreamFile.Length.ToString("F3", CultureInfo.InvariantCulture);
                                 clipBitRate = Math.Round(
-                                     (double)clipStream.PayloadBytes * 8 /
-                                     clip.StreamFile.Length / 1000).ToString("N0", CultureInfo.InvariantCulture);
+                                    (double)clipStream.PayloadBytes * 8 /
+                                    clip.StreamFile.Length / 1000).ToString("N0", CultureInfo.InvariantCulture);
                             }
                             string language = "";
                             if (!string.IsNullOrEmpty(playlistStream.LanguageCode))
@@ -1047,16 +952,16 @@ namespace BDInfo
                             }
 
                             report += string.Format(CultureInfo.InvariantCulture,
-                                                    "{0,-16}{1,-16}{2,-16}{3,-16}{4,-24}{5,-24}{6,-24}{7,-16}{8,-16}\r\n",
-                                                    clipName,
-                                                    string.Format(CultureInfo.InvariantCulture, "{0} (0x{1:X})", clipStream.PID, clipStream.PID),
-                                                    string.Format(CultureInfo.InvariantCulture, "0x{0:X2}", (byte)clipStream.StreamType),
-                                                    clipStream.CodecShortName,
-                                                    language,                                
-                                                    clipSeconds,
-                                                    clipBitRate,
-                                                    clipStream.PayloadBytes.ToString("N0", CultureInfo.InvariantCulture),
-                                                    clipStream.PacketCount.ToString("N0", CultureInfo.InvariantCulture));
+                                "{0,-16}{1,-16}{2,-16}{3,-16}{4,-24}{5,-24}{6,-24}{7,-16}{8,-16}\r\n",
+                                clipName,
+                                string.Format(CultureInfo.InvariantCulture, "{0} (0x{1:X})", clipStream.PID, clipStream.PID),
+                                string.Format(CultureInfo.InvariantCulture, "0x{0:X2}", (byte)clipStream.StreamType),
+                                clipStream.CodecShortName,
+                                language,
+                                clipSeconds,
+                                clipBitRate,
+                                clipStream.PayloadBytes.ToString("N0", CultureInfo.InvariantCulture),
+                                clipStream.PacketCount.ToString("N0", CultureInfo.InvariantCulture));
                         }
                     }
                 }
@@ -1078,7 +983,6 @@ namespace BDInfo
                     try { reportFile.Write(report); }
                     catch { }
                 }
-//                textBoxReport.Text += report;
                 report = "";
                 GC.Collect();
             }
@@ -1087,103 +991,12 @@ namespace BDInfo
             {
                 try { reportFile.Write(report); }
                 catch { }
-
             }
-//            textBoxReport.Text += report;
 
             if (reportFile != null)
             {
                 reportFile.Close();
             }
-#if false
-            textBoxReport.Select(0, 0);
-            comboBoxPlaylist.SelectedIndex = 0;
-            comboBoxChartType.SelectedIndex = 0;
-#endif
-        }
-
-        private void buttonCopy_Click(
-            object sender, 
-            EventArgs e)
-        {
-            Clipboard.SetText(textBoxReport.Text);
-        }
-
-        private void textBoxReport_KeyDown(
-            object sender, 
-            KeyEventArgs e)
-        {
-            if (e.Control && (e.KeyCode == System.Windows.Forms.Keys.A))
-            {
-                textBoxReport.SelectAll();
-                e.SuppressKeyPress = true;
-                e.Handled = true;
-            }
-            else
-            {
-                e.Handled = false;
-            }
-        }
-
-        private void comboBoxPlaylist_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            TSPlaylistFile playlist = (TSPlaylistFile)comboBoxPlaylist.SelectedItem;
-
-            comboBoxAngle.Items.Clear();
-            for (int i = 0; i <= playlist.AngleStreams.Count; i++)
-            {
-                comboBoxAngle.Items.Add(i);
-            }
-            if (comboBoxAngle.Items.Count > 0)
-            {
-                comboBoxAngle.SelectedIndex = 0;
-            }
-
-            comboBoxStream.Items.Clear();
-            foreach (TSVideoStream videoStream in playlist.VideoStreams)
-            {
-                comboBoxStream.Items.Add(videoStream);
-            }
-            if (comboBoxStream.Items.Count > 0)
-            {
-                comboBoxStream.SelectedIndex = 0;
-            }
-        }
-
-        private void buttonChart_Click(
-            object sender, 
-            EventArgs e)
-        {
-            if (Playlists == null ||
-                comboBoxPlaylist.SelectedItem == null ||
-                comboBoxStream.SelectedItem == null ||
-                comboBoxAngle.SelectedItem == null ||
-                comboBoxChartType.SelectedItem == null)
-            {
-                return;
-            }
-
-            TSPlaylistFile playlist = 
-                (TSPlaylistFile)comboBoxPlaylist.SelectedItem;
-            TSVideoStream videoStream =
-                (TSVideoStream)comboBoxStream.SelectedItem;
-            int angleIndex =
-                (int)comboBoxAngle.SelectedItem;
-            string chartType =
-                comboBoxChartType.SelectedItem.ToString();
-
-            FormChart chart = new FormChart();
-            chart.Generate(
-                chartType, playlist,
-                videoStream.PID, angleIndex);
-            chart.Show();
-        }
-
-        private void FormReport_FormClosed(
-            object sender, 
-            FormClosedEventArgs e)
-        {
-            GC.Collect();
         }
     }
 }

@@ -1,11 +1,16 @@
-FROM mono:5.12.0.226
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
-RUN mkdir -p /usr/src/app/source /usr/src/app/build
-WORKDIR /usr/src/app/source
+WORKDIR /src
+COPY . .
 
-COPY . /usr/src/app/source
-RUN nuget restore -NonInteractive
-RUN xbuild /property:Configuration=Release /property:OutDir=/usr/src/app/build/
-WORKDIR /usr/src/app/build
+RUN dotnet restore BDInfo/BDInfo.csproj
+RUN dotnet publish BDInfo/BDInfo.csproj -c Release -o /app/publish
 
-ENTRYPOINT [ "mono",  "./BDInfo.exe" ]
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/runtime:8.0-alpine
+
+WORKDIR /app
+COPY --from=build /app/publish .
+
+ENTRYPOINT ["./BDInfo"]
