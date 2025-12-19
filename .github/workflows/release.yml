@@ -42,12 +42,7 @@ jobs:
         run: dotnet restore BDInfo/BDInfo.csproj
 
       - name: Publish
-        run: |
-          dotnet publish BDInfo/BDInfo.csproj \
-            -c Release \
-            -r ${{ matrix.rid }} \
-            --self-contained true \
-            -o ./publish/${{ matrix.artifact }}
+        run: dotnet publish BDInfo/BDInfo.csproj -c Release -r ${{ matrix.rid }} --self-contained true -o ./publish/${{ matrix.artifact }}
 
       - name: Create archive (Linux/macOS)
         if: runner.os != 'Windows'
