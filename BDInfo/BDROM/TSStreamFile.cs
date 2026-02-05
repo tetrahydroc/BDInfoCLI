@@ -365,6 +365,7 @@ namespace BDInfo
                         packetSeconds += clip.PacketSeconds;
                     }
                 }
+
                 if (packetSeconds > 0)
                 {
                     foreach (TSStream playlistStream in playlist.SortedStreams)
@@ -398,8 +399,10 @@ namespace BDInfo
                 {
                     if (clip.Name != this.Name) continue;
 
+                    // Allow 1 second tolerance before TimeIn to handle PTS timing discrepancies
+                    // (some discs have stream PTS that starts slightly before the playlist TimeIn)
                     if (streamTime == 0 ||
-                        (streamTime >= clip.TimeIn &&
+                        (streamTime >= clip.TimeIn - 1.0 &&
                          streamTime <= clip.TimeOut))
                     {
                         clip.PayloadBytes += streamState.WindowBytes;
@@ -408,11 +411,12 @@ namespace BDInfo
                         if (streamOffset > clip.TimeIn &&
                             streamOffset - clip.TimeIn > clip.PacketSeconds)
                         {
-                            clip.PacketSeconds = streamOffset - clip.TimeIn;
+                            double newPacketSeconds = streamOffset - clip.TimeIn;
+                            clip.PacketSeconds = newPacketSeconds;
                         }
 
                         Dictionary<ushort, TSStream> playlistStreams = playlist.Streams;
-                        if (clip.AngleIndex > 0 && 
+                        if (clip.AngleIndex > 0 &&
                             clip.AngleIndex < playlist.AngleStreams.Count + 1)
                         {
                             playlistStreams = playlist.AngleStreams[clip.AngleIndex - 1];
@@ -1299,9 +1303,12 @@ namespace BDInfo
                                                 streamState.PTSLast = streamState.PTS;
                                             }
 
-                                            streamState.PTSDiff = streamState.PTS - streamState.DTSPrev;
+                                            // Guard against underflow when PTS < DTSPrev (can happen with timing discontinuities)
+                                            streamState.PTSDiff = streamState.PTS >= streamState.DTSPrev
+                                                ? streamState.PTS - streamState.DTSPrev
+                                                : 0;
 
-                                            if (streamState.PTSCount > 0 && 
+                                            if (streamState.PTSCount > 0 &&
                                                 stream.IsVideoStream)
                                             {
                                                 UpdateStreamBitrates(stream.PID, streamState.PTS, streamState.PTSDiff);
@@ -1426,7 +1433,10 @@ namespace BDInfo
                                             streamState.PESHeader[streamState.PESHeaderIndex++] = 
                                                 (byte)(streamState.Parse & 0xff);
 #endif
-                                            streamState.PTSDiff = streamState.DTSTemp - streamState.DTSPrev;
+                                            // Guard against underflow when DTSTemp < DTSPrev (can happen with timing discontinuities)
+                                            streamState.PTSDiff = streamState.DTSTemp >= streamState.DTSPrev
+                                                ? streamState.DTSTemp - streamState.DTSPrev
+                                                : 0;
 
                                             if (streamState.PTSCount > 0 &&
                                                 stream.IsVideoStream)
@@ -1502,7 +1512,10 @@ namespace BDInfo
                         StreamStates[stream.PID].PTSLast > PTSLast)
                     {
                         PTSLast = StreamStates[stream.PID].PTSLast;
-                        PTSDiff = PTSLast - StreamStates[stream.PID].DTSPrev;
+                        // Guard against underflow
+                        PTSDiff = PTSLast >= StreamStates[stream.PID].DTSPrev
+                            ? PTSLast - StreamStates[stream.PID].DTSPrev
+                            : 0;
                     }
                     UpdateStreamBitrates(stream.PID, PTSLast, PTSDiff);
                 }

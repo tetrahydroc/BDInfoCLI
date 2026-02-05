@@ -488,6 +488,13 @@ namespace BDInfo
                 }
             }
 
+            // Initialize playlists BEFORE stream file scan so that Streams dictionary
+            // is populated when UpdateStreamBitrate accumulates PayloadBytes/PacketSeconds
+            foreach (TSPlaylistFile playlistFile in PlaylistFiles.Values)
+            {
+                playlistFile.Initialize();
+            }
+
             List<TSStreamFile> errorStreamFiles = new List<TSStreamFile>();
             foreach (TSStreamFile streamFile in streamFiles)
             {
@@ -525,9 +532,16 @@ namespace BDInfo
                 }
             }
 
+            // Copy codec info from scanned stream files back to playlist streams (for IsVBR, codec profiles, etc.)
+            // This must happen after stream file scan so that codec-specific data is available
             foreach (TSPlaylistFile playlistFile in PlaylistFiles.Values)
             {
-                playlistFile.Initialize();
+                playlistFile.CopyStreamFileCodecInfo();
+            }
+
+            // Framerate detection and MVC view setup
+            foreach (TSPlaylistFile playlistFile in PlaylistFiles.Values)
+            {
                 if (!Is50Hz)
                 {
                     int vidStreamCount = playlistFile.VideoStreams.Count;

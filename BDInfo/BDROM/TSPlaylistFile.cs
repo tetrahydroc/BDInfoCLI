@@ -749,6 +749,94 @@ namespace BDInfo
             return stream;
         }
 
+        /// <summary>
+        /// Updates playlist stream info (IsVBR, codec profiles, etc.) from the scanned stream file data.
+        /// Call this after stream files have been scanned to copy codec-specific information.
+        /// </summary>
+        public void CopyStreamFileCodecInfo()
+        {
+            if (StreamClips.Count == 0) return;
+
+            TSStreamClip referenceClip = StreamClips[0];
+            foreach (TSStreamClip clip in StreamClips)
+            {
+                if (clip.StreamClipFile.Streams.Count > referenceClip.StreamClipFile.Streams.Count)
+                {
+                    referenceClip = clip;
+                }
+                else if (clip.Length > referenceClip.Length)
+                {
+                    referenceClip = clip;
+                }
+            }
+
+            if (referenceClip.StreamFile == null) return;
+
+            foreach (TSStream clipStream in referenceClip.StreamFile.Streams.Values)
+            {
+                if (Streams.ContainsKey(clipStream.PID))
+                {
+                    TSStream stream = Streams[clipStream.PID];
+
+                    if (stream.StreamType != clipStream.StreamType) continue;
+
+                    if (clipStream.BitRate > stream.BitRate)
+                    {
+                        stream.BitRate = clipStream.BitRate;
+                    }
+                    stream.IsVBR = clipStream.IsVBR;
+
+                    if (stream.IsVideoStream && clipStream.IsVideoStream)
+                    {
+                        ((TSVideoStream)stream).EncodingProfile =
+                            ((TSVideoStream)clipStream).EncodingProfile;
+                        ((TSVideoStream)stream).ExtendedData =
+                            ((TSVideoStream)clipStream).ExtendedData;
+                    }
+                    else if (stream.IsAudioStream && clipStream.IsAudioStream)
+                    {
+                        TSAudioStream audioStream = (TSAudioStream)stream;
+                        TSAudioStream clipAudioStream = (TSAudioStream)clipStream;
+
+                        if (clipAudioStream.ChannelCount > audioStream.ChannelCount)
+                        {
+                            audioStream.ChannelCount = clipAudioStream.ChannelCount;
+                        }
+                        if (clipAudioStream.LFE > audioStream.LFE)
+                        {
+                            audioStream.LFE = clipAudioStream.LFE;
+                        }
+                        if (clipAudioStream.SampleRate > audioStream.SampleRate)
+                        {
+                            audioStream.SampleRate = clipAudioStream.SampleRate;
+                        }
+                        if (clipAudioStream.BitDepth > audioStream.BitDepth)
+                        {
+                            audioStream.BitDepth = clipAudioStream.BitDepth;
+                        }
+                        if (clipAudioStream.DialNorm < audioStream.DialNorm)
+                        {
+                            audioStream.DialNorm = clipAudioStream.DialNorm;
+                        }
+                        if (clipAudioStream.AudioMode != TSAudioMode.Unknown)
+                        {
+                            audioStream.AudioMode = clipAudioStream.AudioMode;
+                        }
+                        if (clipAudioStream.HasExtensions != audioStream.HasExtensions)
+                        {
+                            audioStream.HasExtensions = clipAudioStream.HasExtensions;
+                        }
+                        if (clipAudioStream.CoreStream != null &&
+                            audioStream.CoreStream == null)
+                        {
+                            audioStream.CoreStream = (TSAudioStream)
+                                clipAudioStream.CoreStream.Clone();
+                        }
+                    }
+                }
+            }
+        }
+
         private void LoadStreamClips()
         {
             AngleClips.Clear();
