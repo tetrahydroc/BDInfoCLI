@@ -58,9 +58,8 @@ namespace BDInfo
         private static string ReadODS(TSGraphicsStream stream, TSStreamBuffer buffer)
         {
             string tag = string.Empty;
-            int temp = 0;
-            int segmentSize = buffer.ReadBits2(16);
-            int objectID = buffer.ReadBits2(16); // object ID
+            _ = buffer.ReadBits2(16); // segmentSize
+            _ = buffer.ReadBits2(16); // objectID
 
             if (!stream.LastFrame.Finished)
             {
