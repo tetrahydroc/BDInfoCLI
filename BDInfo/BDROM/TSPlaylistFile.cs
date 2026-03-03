@@ -834,6 +834,10 @@ namespace BDInfo
                             audioStream.CoreStream = (TSAudioStream)
                                 clipAudioStream.CoreStream.Clone();
                         }
+                        if (!string.IsNullOrEmpty(clipAudioStream.ExtendedData))
+                        {
+                            audioStream.ExtendedData = clipAudioStream.ExtendedData;
+                        }
                     }
                 }
             }

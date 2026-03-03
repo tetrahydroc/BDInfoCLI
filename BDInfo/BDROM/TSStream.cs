@@ -262,9 +262,7 @@ namespace BDInfo
                     case TSStreamType.VC1_VIDEO:
                         return "VC-1 Video";
                     case TSStreamType.MPEG1_AUDIO:
-                        return "MP1 Audio";
                     case TSStreamType.MPEG2_AUDIO:
-                        return "MP2 Audio";
                     case TSStreamType.MPEG2_AAC_AUDIO:
                     case TSStreamType.MPEG4_AAC_AUDIO:
                         return (string)((TSAudioStream)this).ExtendedData;
@@ -670,7 +668,8 @@ namespace BDInfo
         DualMono,
         Stereo,
         Surround,
-        Extended
+        Extended,
+        JointStereo
     }
 
     public class TSAudioStream : TSStream
@@ -804,6 +803,10 @@ namespace BDInfo
                         case TSAudioMode.Surround:
                             description += " / Dolby Surround";
                             break;
+
+                        case TSAudioMode.JointStereo:
+                            description += " / Joint Stereo";
+                            break;
                     }
                 }
                 if (description.EndsWith(" / "))
@@ -846,6 +849,7 @@ namespace BDInfo
             stream.LFE = LFE;
             stream.DialNorm = DialNorm;
             stream.AudioMode = AudioMode;
+            stream.ExtendedData = ExtendedData;
 
             if (CoreStream != null)
             {
