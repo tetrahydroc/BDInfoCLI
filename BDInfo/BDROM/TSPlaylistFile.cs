@@ -839,6 +839,16 @@ namespace BDInfo
                             audioStream.ExtendedData = clipAudioStream.ExtendedData;
                         }
                     }
+                    else if (stream.IsGraphicsStream && clipStream.IsGraphicsStream)
+                    {
+                        TSGraphicsStream graphicsStream = (TSGraphicsStream)stream;
+                        TSGraphicsStream clipGraphicsStream = (TSGraphicsStream)clipStream;
+
+                        graphicsStream.Width = clipGraphicsStream.Width;
+                        graphicsStream.Height = clipGraphicsStream.Height;
+                        graphicsStream.Captions += clipGraphicsStream.Captions;
+                        graphicsStream.ForcedCaptions += clipGraphicsStream.ForcedCaptions;
+                    }
                 }
             }
         }

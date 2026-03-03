@@ -219,7 +219,8 @@ namespace BDInfo
         private bool ScanStream(
             TSStream stream,
             TSStreamState streamState,
-            TSStreamBuffer buffer)
+            TSStreamBuffer buffer,
+            bool isFullScan)
         {
             streamState.StreamTag = null;
 
@@ -312,6 +313,14 @@ namespace BDInfo
                 case TSStreamType.DTS_HD_SECONDARY_AUDIO:
                     TSCodecDTSHD.Scan(
                         (TSAudioStream)stream, buffer, bitrate, ref streamState.StreamTag);
+                    break;
+
+                case TSStreamType.PRESENTATION_GRAPHICS:
+                    if (isFullScan)
+                        TSCodecPGS.Scan(
+                            (TSGraphicsStream)stream, buffer, ref streamState.StreamTag);
+                    else
+                        stream.IsInitialized = true;
                     break;
 
                 default:
@@ -649,9 +658,10 @@ namespace BDInfo
                                             parser.StreamState.TransferCount++;
 
                                             bool isFinished = ScanStream(
-                                                parser.Stream, 
-                                                parser.StreamState, 
-                                                parser.StreamState.StreamBuffer);
+                                                parser.Stream,
+                                                parser.StreamState,
+                                                parser.StreamState.StreamBuffer,
+                                                isFullScan);
 
                                             if (!isFullScan && isFinished)
                                             {
@@ -1123,7 +1133,8 @@ namespace BDInfo
                                     bool isFinished = ScanStream(
                                         stream,
                                         streamState,
-                                        streamState.StreamBuffer);
+                                        streamState.StreamBuffer,
+                                        isFullScan);
 
                                     if (!isFullScan && isFinished)
                                     {
