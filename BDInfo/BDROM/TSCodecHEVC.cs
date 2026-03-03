@@ -446,6 +446,7 @@ namespace BDInfo
 
             do
             {
+                var syncByteFound = false;
                 do
                 {
                     var streamPos = buffer.Position;
@@ -453,17 +454,24 @@ namespace BDInfo
                         buffer.ReadByte() == 0x0 &&
                         buffer.ReadByte() == 0x0 &&
                         buffer.ReadByte() == 0x1)
+                    {
+                        syncByteFound = true;
                         break;
+                    }
 
                     buffer.BSSkipBytes((int) (streamPos - buffer.Position));
                     if (buffer.ReadByte() == 0x0 &&
                         buffer.ReadByte() == 0x0 &&
                         buffer.ReadByte() == 0x1)
+                    {
+                        syncByteFound = true;
                         break;
-                    buffer.BSSkipBytes((int)(streamPos - buffer.Position + 1));
-                } while (buffer.Position < buffer.Length);
+                    }
 
-                if (buffer.Position < buffer.Length)
+                    buffer.BSSkipBytes((int)(streamPos - buffer.Position + 1));
+                } while (buffer.Position < buffer.Length - 3);
+
+                if (buffer.Position < buffer.Length && syncByteFound)
                 {
                     var lastStreamPos = buffer.Position;
 
@@ -496,7 +504,7 @@ namespace BDInfo
                     buffer.BSSkipNextByte();
                     buffer.BSSkipBytes((int) (lastStreamPos - buffer.Position));
                 }
-            } while (buffer.Position < buffer.Length);
+            } while (buffer.Position < buffer.Length - 3);
 
             ExtendedData.PreferredTransferCharacteristics = PreferredTransferCharacteristics;
 
