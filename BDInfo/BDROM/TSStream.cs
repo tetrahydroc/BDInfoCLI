@@ -34,6 +34,8 @@ namespace BDInfo
         VC1_VIDEO = 0xea,
         MPEG1_AUDIO = 0x03,
         MPEG2_AUDIO = 0x04,
+        MPEG2_AAC_AUDIO = 0x0F,
+        MPEG4_AAC_AUDIO = 0x11,
         LPCM_AUDIO = 0x80,
         AC3_AUDIO = 0x81,
         AC3_PLUS_AUDIO = 0x84,
@@ -191,6 +193,8 @@ namespace BDInfo
                 {
                     case TSStreamType.MPEG1_AUDIO:
                     case TSStreamType.MPEG2_AUDIO:
+                    case TSStreamType.MPEG2_AAC_AUDIO:
+                    case TSStreamType.MPEG4_AAC_AUDIO:
                     case TSStreamType.LPCM_AUDIO:
                     case TSStreamType.AC3_AUDIO:
                     case TSStreamType.AC3_PLUS_AUDIO:
@@ -261,6 +265,9 @@ namespace BDInfo
                         return "MP1 Audio";
                     case TSStreamType.MPEG2_AUDIO:
                         return "MP2 Audio";
+                    case TSStreamType.MPEG2_AAC_AUDIO:
+                    case TSStreamType.MPEG4_AAC_AUDIO:
+                        return (string)((TSAudioStream)this).ExtendedData;
                     case TSStreamType.LPCM_AUDIO:
                         return "LPCM Audio";
                     case TSStreamType.AC3_AUDIO:
@@ -331,6 +338,10 @@ namespace BDInfo
                         return "MP1";
                     case TSStreamType.MPEG2_AUDIO:
                         return "MP2";
+                    case TSStreamType.MPEG2_AAC_AUDIO:
+                        return "MPEG-2 AAC";
+                    case TSStreamType.MPEG4_AAC_AUDIO:
+                        return "MPEG-4 AAC";
                     case TSStreamType.LPCM_AUDIO:
                         return "LPCM";
                     case TSStreamType.AC3_AUDIO:
@@ -391,6 +402,10 @@ namespace BDInfo
                         return "MP1";
                     case TSStreamType.MPEG2_AUDIO:
                         return "MP2";
+                    case TSStreamType.MPEG2_AAC_AUDIO:
+                        return "MPEG-2 AAC";
+                    case TSStreamType.MPEG4_AAC_AUDIO:
+                        return "MPEG-4 AAC";
                     case TSStreamType.LPCM_AUDIO:
                         return "LPCM";
                     case TSStreamType.AC3_AUDIO:
@@ -651,6 +666,7 @@ namespace BDInfo
     public enum TSAudioMode
     {
         Unknown,
+        Mono,
         DualMono,
         Stereo,
         Surround,
@@ -674,6 +690,7 @@ namespace BDInfo
         public TSAudioMode AudioMode;
         public TSAudioStream CoreStream;
         public TSChannelLayout ChannelLayout;
+        public string ExtendedData;
 
         public static int ConvertSampleRate(
             TSSampleRate sampleRate)
