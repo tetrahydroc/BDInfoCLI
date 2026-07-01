@@ -34,6 +34,14 @@ namespace BDInfo
         private ScanBDROMResult ScanResult = new ScanBDROMResult();
 
         /// <summary>
+        /// When true, scan errors trigger an interactive "Continue scanning? (y/n)"
+        /// prompt. When false (the default), scan errors are logged to stderr and the
+        /// scan continues automatically, so BDInfo runs unattended in headless
+        /// environments (CI, daemons, containers) without hanging on closed stdin.
+        /// </summary>
+        public bool PromptOnError { get; set; } = false;
+
+        /// <summary>
         /// Initialize and scan a BD-ROM path (directory or ISO file).
         /// </summary>
         public void InitBDROM(string path)
@@ -79,26 +87,36 @@ namespace BDInfo
 
         protected bool BDROM_PlaylistFileScanError(TSPlaylistFile playlistFile, Exception ex)
         {
-            Console.Error.WriteLine($"Error scanning playlist {playlistFile.Name}: {ex.Message}");
-            Console.Write("Continue scanning? (y/n): ");
-            string response = Console.ReadLine();
-            return response?.ToLower() == "y";
+            return HandleScanError($"Error scanning playlist {playlistFile.Name}: {ex.Message}");
         }
 
         protected bool BDROM_StreamFileScanError(TSStreamFile streamFile, Exception ex)
         {
-            Console.Error.WriteLine($"Error scanning stream file {streamFile.Name}: {ex.Message}");
-            Console.Write("Continue scanning? (y/n): ");
-            string response = Console.ReadLine();
-            return response?.ToLower() == "y";
+            return HandleScanError($"Error scanning stream file {streamFile.Name}: {ex.Message}");
         }
 
         protected bool BDROM_StreamClipFileScanError(TSStreamClipFile streamClipFile, Exception ex)
         {
-            Console.Error.WriteLine($"Error scanning stream clip file {streamClipFile.Name}: {ex.Message}");
+            return HandleScanError($"Error scanning stream clip file {streamClipFile.Name}: {ex.Message}");
+        }
+
+        /// <summary>
+        /// Report a scan error and decide whether to keep scanning. Returns true to
+        /// continue. By default errors are non-fatal and the scan continues. With
+        /// PromptOnError set, the user is asked interactively - but only when stdin
+        /// is an actual terminal; a redirected/closed stdin still continues rather
+        /// than blocking on a ReadLine() that never returns input.
+        /// </summary>
+        private bool HandleScanError(string message)
+        {
+            Console.Error.WriteLine(message);
+
+            if (!PromptOnError || Console.IsInputRedirected)
+                return true;
+
             Console.Write("Continue scanning? (y/n): ");
             string response = Console.ReadLine();
-            return response?.ToLower() == "y";
+            return response?.Trim().ToLower() == "y";
         }
 
         /// <summary>

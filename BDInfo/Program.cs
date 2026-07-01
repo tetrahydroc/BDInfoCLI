@@ -51,6 +51,7 @@ namespace BDInfo
             bool version = false;
             bool whole = false;
             bool list = false;
+            bool prompt = false;
             string mpls = null;
 
             OptionSet optionSet = new OptionSet()
@@ -58,6 +59,7 @@ namespace BDInfo
                 .Add("l|list", "Print the list of playlists.", option => list = option != null)
                 .Add("m=|mpls=", "Comma separated list of playlists to scan.", option => mpls = option)
                 .Add("w|whole", "Scan whole disc - every playlist.", option => whole = option != null)
+                .Add("p|prompt", "Prompt to continue on scan errors instead of skipping them.", option => prompt = option != null)
                 .Add("v|version", "Print the version.", option => version = option != null)
             ;
 
@@ -112,6 +114,7 @@ namespace BDInfo
 
             // Create CLI handler and run scan
             BDInfoCLI cli = new BDInfoCLI();
+            cli.PromptOnError = prompt;
 
             Console.WriteLine("Please wait while we scan the disc...");
             cli.InitBDROM(bdPath);
