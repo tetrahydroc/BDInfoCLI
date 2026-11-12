@@ -1571,6 +1571,8 @@ namespace BDInfo
                 {
                     fileStream.Close();
                 }
+                // Each stream's 5 MB read buffer is only needed while this file is being read
+                StreamStates.Clear();
             }
         }
 
