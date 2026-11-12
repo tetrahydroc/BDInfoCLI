@@ -60,6 +60,7 @@ namespace BDInfo
                 .Add("m=|mpls=", "Comma separated list of playlists to scan.", option => mpls = option)
                 .Add("w|whole", "Scan whole disc - every playlist.", option => whole = option != null)
                 .Add("p|prompt", "Prompt to continue on scan errors instead of skipping them.", option => prompt = option != null)
+                .Add("filter-loops", "Leave out playlists that loop (same as the GUI's \"Filter looping playlists\" setting).", option => { if (option != null) BDInfoSettings.FilterLoopingPlaylists = true; })
                 .Add("v|version", "Print the version.", option => version = option != null)
             ;
 
