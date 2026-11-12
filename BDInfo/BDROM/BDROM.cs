@@ -411,7 +411,17 @@ namespace BDInfo
         private void ReadDiscTitle(StreamReader fileStream)
         {
             XmlDocument xDoc = new XmlDocument();
-            xDoc.Load(fileStream);
+            try
+            {
+                xDoc.Load(fileStream);
+            }
+            catch (XmlException ex)
+            {
+                // The title file is only used for the disc's name, so a broken one shouldn't stop the scan
+                Console.Error.WriteLine($"Skipping unreadable disc title file: {ex.Message}");
+                fileStream.Close();
+                return;
+            }
             var xNsMgr = new XmlNamespaceManager(xDoc.NameTable);
             xNsMgr.AddNamespace("di", "urn:BDA:bdmv;discinfo");
             var xNode = xDoc.DocumentElement?.SelectSingleNode("di:discinfo/di:title/di:name", xNsMgr);
