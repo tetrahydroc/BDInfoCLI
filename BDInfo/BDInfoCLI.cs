@@ -197,8 +197,8 @@ namespace BDInfo
                 }
             }
 
-            Console.WriteLine(String.Format("{0,-4}{1,-7}{2,-15}{3,-10}{4,-16}{5,-16}\n",
-                "#", "Group", "Playlist File", "Length", "Estimated Bytes", "Measured Bytes"));
+            Console.WriteLine(String.Format("{0,-4}{1,-7}{2,-15}{3,-10}{4,-16}{5,-16}{6,-6}\n",
+                "#", "Group", "Playlist File", "Length", "Estimated Bytes", "Measured Bytes", "Audio"));
 
             int playlistIdx = 1;
             Dictionary<int, TSPlaylistFile> playlistDict = new Dictionary<int, TSPlaylistFile>();
@@ -254,8 +254,9 @@ namespace BDInfo
                         fileSize2 = "-";
                     }
 
-                    Console.WriteLine(String.Format("{0,-4:G}{1,-7}{2,-15}{3,-10}{4,-16}{5,-16}",
-                        playlistIdx.ToString(), groupString, playlist.Name, length, fileSize, fileSize2));
+                    Console.WriteLine(String.Format("{0,-4:G}{1,-7}{2,-15}{3,-10}{4,-16}{5,-16}{6,-6}",
+                        playlistIdx.ToString(), groupString, playlist.Name, length, fileSize, fileSize2,
+                        playlist.AudioStreams.Count));
                     playlistIdx++;
                 }
             }
