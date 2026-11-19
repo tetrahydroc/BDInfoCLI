@@ -1202,11 +1202,11 @@ namespace BDInfo
                     }
                     else
                     {
-                        if (x.LanguageCode == "eng")
+                        if (x.LanguageCode == "eng" && y.LanguageCode != "eng")
                         {
                             return -1;
                         }
-                        else if (y.LanguageCode == "eng")
+                        else if (y.LanguageCode == "eng" && x.LanguageCode != "eng")
                         {
                             return 1;
                         }
@@ -1251,11 +1251,11 @@ namespace BDInfo
             }
             else
             {
-                if (x.LanguageCode == "eng")
+                if (x.LanguageCode == "eng" && y.LanguageCode != "eng")
                 {
                     return -1;
                 }
-                else if (y.LanguageCode == "eng")
+                else if (y.LanguageCode == "eng" && x.LanguageCode != "eng")
                 {
                     return 1;
                 }
@@ -1318,11 +1318,11 @@ namespace BDInfo
                 {
                     return 1;
                 }
-                else if (x.LanguageCode == "eng")
+                else if (x.LanguageCode == "eng" && y.LanguageCode != "eng")
                 {
                     return -1;
                 }
-                else if (y.LanguageCode == "eng")
+                else if (y.LanguageCode == "eng" && x.LanguageCode != "eng")
                 {
                     return 1;
                 }
