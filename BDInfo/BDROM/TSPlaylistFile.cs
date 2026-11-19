@@ -774,6 +774,29 @@ namespace BDInfo
 
             if (referenceClip.StreamFile == null) return;
 
+            // The 3D right-eye (MVC) stream is only found once the files are read, after Initialize()
+            if (BDInfoSettings.EnableSSIF &&
+                referenceClip.StreamFile.InterleavedFile != null &&
+                referenceClip.StreamFile.Streams.ContainsKey(4114) &&
+                !Streams.ContainsKey(4114))
+            {
+                TSStream stream = referenceClip.StreamFile.Streams[4114].Clone();
+                Streams[4114] = stream;
+                if (stream.IsVideoStream)
+                {
+                    VideoStreams.Add((TSVideoStream)stream);
+                    int position = SortedStreams.FindLastIndex(s => s.IsVideoStream) + 1;
+                    SortedStreams.Insert(position++, stream);
+                    for (int i = 0; i < AngleCount; i++)
+                    {
+                        TSStream angleStream = stream.Clone();
+                        angleStream.AngleIndex = i + 1;
+                        AngleStreams[i][angleStream.PID] = angleStream;
+                        SortedStreams.Insert(position++, angleStream);
+                    }
+                }
+            }
+
             foreach (TSStream clipStream in referenceClip.StreamFile.Streams.Values)
             {
                 if (Streams.ContainsKey(clipStream.PID))
