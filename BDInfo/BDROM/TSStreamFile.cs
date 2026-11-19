@@ -1138,7 +1138,6 @@ namespace BDInfo
 
                                 if (parser.VariablePacketEnd && streamState.PacketLengthVariable)
                                 {
-                                    streamState.PacketLength = 0;
                                     parser.VariablePacketEnd = false;
                                     streamState.PacketLengthVariable = false;
                                 }
