@@ -37,6 +37,7 @@ Options:
   -l, --list       Print the list of playlists.
   -m, --mpls=VALUE Comma separated list of playlists to scan.
   -w, --whole      Scan whole disc - every playlist.
+      --filter-loops Leave out playlists that loop (the GUI's "Filter looping playlists").
   -v, --version    Print the version.
 ```
 
